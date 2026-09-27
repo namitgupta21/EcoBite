@@ -270,6 +270,16 @@ h3 {
   border-radius: var(--radius-md);
   background: var(--color-bone) !important;
   font-family: var(--font-sans) !important;
+  z-index: 1 !important;
+}
+
+.leaflet-top,
+.leaflet-bottom {
+  z-index: 10 !important;
+}
+
+.leaflet-pane {
+  z-index: 2 !important;
 }
 
 /* Subtle warm sepia tint on OpenStreetMap tiles */
@@ -362,6 +372,9 @@ h3 {
   border-radius: var(--radius-md);
   overflow: hidden;
   border: 1px solid var(--color-stone);
+  position: relative;
+  z-index: 1;
+  isolation: isolate; /* Locks all Leaflet inner z-indices inside this container */
 }
 
 /* Responsive Header */

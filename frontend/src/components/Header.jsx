@@ -9,7 +9,7 @@ export default function Header({ stores, activeStore, onSelectStore, activeTab, 
       padding: '12px 16px',
       position: 'sticky',
       top: 0,
-      zIndex: 100
+      zIndex: 1000
     }}>
       <div className="header-container">
         
