@@ -1,12 +1,11 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { MapContainer, TileLayer, Marker, Popup, Circle, Polyline } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import {
   Radar,
-  ArrowRight,
-  CheckCircle,
-  XCircle,
+  Check,
+  X,
   AlertTriangle,
   Clock,
   Sparkles,
@@ -18,44 +17,50 @@ import {
 import confetti from 'canvas-confetti';
 import { api } from '../services/api';
 
-// Create custom futuristic pulsing marker icons for Leaflet
+// Create clean, crisp editorial marker icon with 4px border-radius
 const createStoreIcon = (isCurrent, hasShortage, isDonor) => {
-  let bgColor = '#3b82f6';
-  let borderColor = '#60a5fa';
+  let bgColor = '#f2f1ed';
+  let textColor = '#26251e';
+  let borderColor = '#cdcdc9';
 
   if (isCurrent) {
-    bgColor = '#06b6d4';
-    borderColor = '#22d3ee';
+    bgColor = '#26251e';
+    textColor = '#f7f7f4';
+    borderColor = '#26251e';
   } else if (hasShortage) {
-    bgColor = '#f43f5e';
-    borderColor = '#fb7185';
+    bgColor = '#cf2d56';
+    textColor = '#f7f7f4';
+    borderColor = '#cf2d56';
   } else if (isDonor) {
-    bgColor = '#10b981';
-    borderColor = '#34d399';
+    bgColor = '#34785c';
+    textColor = '#f7f7f4';
+    borderColor = '#34785c';
   }
 
   return L.divIcon({
-    className: 'custom-leaflet-marker',
+    className: 'custom-editorial-marker',
     html: `
       <div style="
-        position: relative;
-        width: 32px;
-        height: 32px;
+        width: 24px;
+        height: 24px;
         background: ${bgColor};
-        border: 2px solid ${borderColor};
-        border-radius: 50%;
+        color: ${textColor};
+        border: 1px solid ${borderColor};
+        border-radius: 4px;
         display: flex;
         align-items: center;
         justify-content: center;
-        box-shadow: 0 0 15px ${borderColor};
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 11px;
+        font-weight: 500;
+        box-shadow: rgba(0, 0, 0, 0.1) 0px 2px 4px;
       ">
-        <div style="width: 10px; height: 10px; background: #ffffff; border-radius: 50%;"></div>
-        ${hasShortage ? `<div style="position: absolute; inset: -6px; border: 2px solid #f43f5e; border-radius: 50%; animation: pulse-border 1.5s infinite;"></div>` : ''}
+        ${isCurrent ? '✦' : '•'}
       </div>
     `,
-    iconSize: [32, 32],
-    iconAnchor: [16, 16],
-    popupAnchor: [0, -16]
+    iconSize: [24, 24],
+    iconAnchor: [12, 12],
+    popupAnchor: [0, -12]
   });
 };
 
@@ -69,28 +74,19 @@ export default function ManagerDashboard({
   const [scanLoading, setScanLoading] = useState(false);
   const [actionLoadingId, setActionLoadingId] = useState(null);
 
-  // Filter incoming pings for this store (where this store is the fulfilling donor)
   const incomingPings = transferPings.filter(
     p => p.from_store_id === activeStore?.id && p.status === 'PENDING'
   );
 
-  // Filter outgoing pings for this store (where this store is the needy recipient)
   const outgoingPings = transferPings.filter(
     p => p.to_store_id === activeStore?.id && p.status === 'PENDING'
   );
 
-  // Filter completed/historical pings
-  const completedPings = transferPings.filter(
-    p => (p.from_store_id === activeStore?.id || p.to_store_id === activeStore?.id) &&
-      p.status === 'COMPLETED'
-  );
-
-  // Handle Accept Transfer
   const handleAcceptTransfer = async (pingId) => {
     setActionLoadingId(pingId);
     try {
       await api.acceptTransfer(pingId);
-      confetti({ particleCount: 50, spread: 60, origin: { y: 0.7 } });
+      confetti({ particleCount: 40, spread: 50, origin: { y: 0.8 } });
       if (onRefresh) onRefresh();
     } catch (err) {
       alert(`Transfer failed: ${err.message}`);
@@ -99,7 +95,6 @@ export default function ManagerDashboard({
     }
   };
 
-  // Handle Decline Transfer
   const handleRejectTransfer = async (pingId) => {
     setActionLoadingId(pingId);
     try {
@@ -112,7 +107,6 @@ export default function ManagerDashboard({
     }
   };
 
-  // Trigger manual network scan
   const handleRunScan = async () => {
     setScanLoading(true);
     try {
@@ -126,94 +120,83 @@ export default function ManagerDashboard({
     }
   };
 
-  // Prepare active transfer vectors for map visualization
   const activeVectors = transferPings
     .filter(p => p.status === 'PENDING' && p.from_store?.lat && p.to_store?.lat)
     .map(p => ({
       id: p.id,
       from: [Number(p.from_store.lat), Number(p.from_store.log)],
       to: [Number(p.to_store.lat), Number(p.to_store.log)],
-      label: `${p.quantity} ${p.ingredient?.unit || ''} ${p.ingredient?.name || ''}`
+      label: `${p.quantity}${p.ingredient?.unit || ''} ${p.ingredient?.name || ''}`
     }));
 
   const activeLat = Number(activeStore?.lat) || 28.6315;
   const activeLog = Number(activeStore?.log) || 77.2167;
 
   return (
-    <div style={{ padding: '0 24px 24px', display: 'flex', flexDirection: 'column', gap: '24px' }}>
+    <div className="responsive-page-container" style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
       
       {/* Top Banner: Store Status & Network Scan */}
-      <div className="glass-panel" style={{ padding: '20px 24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '16px' }}>
+      <div className="card-bone banner-flex" style={{ padding: '16px 20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '14px' }}>
         <div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <span style={{ fontSize: '0.75rem', fontWeight: 700, color: '#06b6d4', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
-              Store Management Console
-            </span>
-            <span className="badge-optimal" style={{ padding: '2px 8px', borderRadius: '6px', fontSize: '0.75rem', fontWeight: 600 }}>
-              Live Telemetry
-            </span>
+            <span className="badge-mono" style={{ fontSize: '10px' }}>STORE MANAGEMENT CONSOLE</span>
+            <span className="badge-optimal">TELEMETRY ACTIVE</span>
           </div>
-          <h2 style={{ fontSize: '1.4rem', fontWeight: 700, color: '#f8fafc', marginTop: '4px' }}>
+          <h2 style={{ fontSize: '20px', fontWeight: 500, color: 'var(--color-ink)', marginTop: '4px' }}>
             {activeStore?.name}
           </h2>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginTop: '4px', fontSize: '0.85rem', color: '#94a3b8' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginTop: '4px', fontSize: '12px', color: 'var(--color-driftwood)', flexWrap: 'wrap' }}>
             <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-              <MapPin size={14} color="#06b6d4" /> {activeStore?.address}
+              <MapPin size={13} color="var(--color-ash)" /> {activeStore?.address}
             </span>
             <span>&bull;</span>
-            <span style={{ fontFamily: 'JetBrains Mono, monospace', color: '#38bdf8' }}>
+            <span style={{ fontFamily: 'var(--font-mono)', color: 'var(--color-ink)' }}>
               {activeLat.toFixed(4)}°N, {activeLog.toFixed(4)}°E
             </span>
           </div>
         </div>
 
-        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+        <div className="banner-actions">
           <button
             onClick={onRefresh}
-            className="btn-outline"
-            style={{ padding: '10px 16px', fontSize: '0.85rem' }}
+            className="btn-secondary"
           >
-            <RefreshCw size={16} />
-            <span>Refresh Telemetry</span>
+            <RefreshCw size={13} />
+            <span>Refresh</span>
           </button>
 
           <button
             onClick={handleRunScan}
             disabled={scanLoading}
             className="btn-primary"
-            style={{ padding: '10px 18px', fontSize: '0.85rem' }}
           >
-            <Sparkles size={16} />
-            <span>{scanLoading ? 'Scanning Network...' : 'Run Autonomous 10km Scan'}</span>
+            <Sparkles size={13} />
+            <span>{scanLoading ? 'Scanning...' : 'Run Autonomous 10km Scan'}</span>
           </button>
         </div>
       </div>
 
-      {/* Grid: 10km Leaflet Map Radar (Left) + Inventory Health Matrix (Right) */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1fr', gap: '24px' }}>
+      {/* Grid: 10km Leaflet Radar Map (Left) + Inventory Matrix (Right) */}
+      <div className="manager-layout-grid">
         
-        {/* 10km Interactive Leaflet Radar Map */}
-        <div className="glass-panel" style={{ padding: '20px', display: 'flex', flexDirection: 'column' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <Radar size={20} color="#06b6d4" />
-              <div>
-                <h3 style={{ fontSize: '1rem', fontWeight: 700, color: '#f8fafc' }}>
-                  10km Geospatial Geofence Radar
-                </h3>
-                <p style={{ fontSize: '0.75rem', color: '#94a3b8' }}>
-                  Real-time radius perimeter centered on {activeStore?.name}
-                </p>
-              </div>
+        {/* 10km Geospatial Leaflet Map */}
+        <div className="card-bone" style={{ padding: '18px', display: 'flex', flexDirection: 'column' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: '12px', flexWrap: 'wrap', gap: '6px' }}>
+            <div>
+              <h3 style={{ fontSize: '16px', fontWeight: 500, color: 'var(--color-ink)' }}>
+                10km Geospatial Geofence Radar
+              </h3>
+              <p style={{ fontSize: '12px', color: 'var(--color-ash)', marginTop: '2px' }}>
+                Radius perimeter centered on {activeStore?.name}
+              </p>
             </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <span style={{ display: 'inline-block', width: '8px', height: '8px', borderRadius: '50%', background: '#06b6d4', boxShadow: '0 0 8px #06b6d4' }}></span>
-              <span style={{ fontSize: '0.75rem', color: '#cbd5e1' }}>10km Geofence Active</span>
-            </div>
+            <span className="badge-mono" style={{ fontSize: '11px' }}>
+              RADIUS: 10.0 KM
+            </span>
           </div>
 
           {/* Leaflet Map Container */}
-          <div style={{ height: '420px', width: '100%', borderRadius: '12px', overflow: 'hidden', border: '1px solid var(--border-color)' }}>
+          <div className="map-container-box">
             <MapContainer
               key={`${activeLat}-${activeLog}`}
               center={[activeLat, activeLog]}
@@ -221,21 +204,22 @@ export default function ManagerDashboard({
               scrollWheelZoom={false}
               style={{ width: '100%', height: '100%' }}
             >
+              {/* OpenStreetMap TileLayer - 100% reliable, zero API key required, styled via CSS */}
               <TileLayer
                 attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
                 url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
               />
 
-              {/* 10km Geofence Boundary Circle around Active Store */}
+              {/* 10km Geofence Boundary Circle */}
               <Circle
                 center={[activeLat, activeLog]}
-                radius={10000} // 10,000 meters = 10km
+                radius={10000}
                 pathOptions={{
-                  color: '#06b6d4',
-                  fillColor: '#06b6d4',
-                  fillOpacity: 0.08,
-                  weight: 2,
-                  dashArray: '6, 6'
+                  color: '#26251e',
+                  fillColor: '#26251e',
+                  fillOpacity: 0.05,
+                  weight: 1.5,
+                  dashArray: '4, 4'
                 }}
               />
 
@@ -252,11 +236,11 @@ export default function ManagerDashboard({
                     icon={createStoreIcon(isCurrent, false, false)}
                   >
                     <Popup>
-                      <div style={{ padding: '4px' }}>
-                        <strong style={{ fontSize: '0.9rem', color: '#38bdf8' }}>{store.name}</strong>
-                        <p style={{ fontSize: '0.75rem', color: '#94a3b8', margin: '4px 0' }}>{store.address}</p>
-                        <div style={{ fontSize: '0.7rem', color: '#cbd5e1', borderTop: '1px solid rgba(255,255,255,0.1)', paddingTop: '4px', marginTop: '4px' }}>
-                          {isCurrent ? '⭐ Active Viewing Store' : 'Nearby Network Node'}
+                      <div style={{ padding: '2px' }}>
+                        <strong style={{ fontSize: '13px', color: 'var(--color-ink)' }}>{store.name}</strong>
+                        <p style={{ fontSize: '11px', color: 'var(--color-driftwood)', margin: '4px 0' }}>{store.address}</p>
+                        <div style={{ fontSize: '11px', color: 'var(--color-ash)', borderTop: '1px solid var(--color-stone)', paddingTop: '4px', marginTop: '4px', fontFamily: 'var(--font-mono)' }}>
+                          {isCurrent ? 'Current Terminal' : 'Cluster Node'}
                         </div>
                       </div>
                     </Popup>
@@ -264,15 +248,15 @@ export default function ManagerDashboard({
                 );
               })}
 
-              {/* Active Transfer Trajectory Vectors */}
+              {/* Active Redistribution Vectors */}
               {activeVectors.map(vec => (
                 <Polyline
                   key={vec.id}
                   positions={[vec.from, vec.to]}
                   pathOptions={{
-                    color: '#f43f5e',
-                    weight: 3,
-                    dashArray: '8, 8'
+                    color: '#f54e00',
+                    weight: 2,
+                    dashArray: '5, 5'
                   }}
                 />
               ))}
@@ -280,68 +264,62 @@ export default function ManagerDashboard({
           </div>
 
           {/* Map Legend */}
-          <div style={{ display: 'flex', gap: '16px', marginTop: '12px', fontSize: '0.75rem', color: '#94a3b8', justifyContent: 'center' }}>
-            <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-              <span style={{ width: '10px', height: '10px', borderRadius: '50%', background: '#06b6d4' }}></span>
+          <div style={{ display: 'flex', gap: '14px', marginTop: '10px', fontSize: '11px', color: 'var(--color-ash)', justifyContent: 'center', fontFamily: 'var(--font-mono)', flexWrap: 'wrap' }}>
+            <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+              <span style={{ width: '8px', height: '8px', background: 'var(--color-ink)', borderRadius: '2px' }}></span>
               Current Store
             </span>
-            <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-              <span style={{ width: '10px', height: '10px', borderRadius: '50%', background: '#3b82f6' }}></span>
-              Partner Stores
+            <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+              <span style={{ width: '8px', height: '8px', background: 'var(--color-bone)', border: '1px solid var(--color-stone)', borderRadius: '2px' }}></span>
+              Cluster Branches
             </span>
-            <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-              <span style={{ width: '12px', height: '2px', background: '#f43f5e' }}></span>
+            <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+              <span style={{ width: '12px', height: '2px', background: 'var(--color-ember)' }}></span>
               Active Redistribution Vector
             </span>
           </div>
         </div>
 
-        {/* Inventory Stock Gauge Matrix */}
-        <div className="glass-panel" style={{ padding: '20px', display: 'flex', flexDirection: 'column' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <Layers size={20} color="#06b6d4" />
-              <div>
-                <h3 style={{ fontSize: '1rem', fontWeight: 700, color: '#f8fafc' }}>
-                  Micro-Inventory Gauges
-                </h3>
-                <p style={{ fontSize: '0.75rem', color: '#94a3b8' }}>
-                  Real-time stock monitoring & FEFO tracking
-                </p>
-              </div>
+        {/* Inventory Gauges Column */}
+        <div className="card-bone" style={{ padding: '18px', display: 'flex', flexDirection: 'column' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: '12px' }}>
+            <div>
+              <h3 style={{ fontSize: '16px', fontWeight: 500, color: 'var(--color-ink)' }}>
+                Micro-Inventory Matrix
+              </h3>
+              <p style={{ fontSize: '12px', color: 'var(--color-ash)', marginTop: '2px' }}>
+                Stock telemetry & FEFO expiry tracking
+              </p>
             </div>
-            <span style={{ fontSize: '0.75rem', color: '#94a3b8' }}>
-              {inventory.length} ingredients tracked
+            <span className="badge-mono" style={{ fontSize: '11px' }}>
+              {inventory.length} ITEMS
             </span>
           </div>
 
-          {/* List of Ingredients */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', overflowY: 'auto', maxHeight: '430px', paddingRight: '4px' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', overflowY: 'auto', maxHeight: '420px', paddingRight: '2px' }}>
             {inventory.map(item => {
               const qty = Number(item.quantity);
               const reorder = Number(item.reorder_level);
               const isCritical = qty <= reorder;
               const isWarning = qty > reorder && qty <= reorder * 1.5;
 
-              let statusColor = '#10b981';
+              let statusColor = 'var(--color-forest)';
               let badgeClass = 'badge-optimal';
               let statusLabel = 'Optimal';
 
               if (isCritical) {
-                statusColor = '#f43f5e';
+                statusColor = 'var(--color-crimson)';
                 badgeClass = 'badge-critical';
-                statusLabel = 'Critical Shortage';
+                statusLabel = 'Critical';
               } else if (isWarning) {
-                statusColor = '#f59e0b';
+                statusColor = 'var(--color-amber)';
                 badgeClass = 'badge-warning';
                 statusLabel = 'Reorder Zone';
               }
 
-              // Compute percentage of safe stock (assuming capacity is 4x reorder level)
               const maxExpected = reorder * 4;
               const progressPct = Math.min(100, Math.round((qty / maxExpected) * 100));
 
-              // Format expiry date
               const expiryDate = item.expiry_date ? new Date(item.expiry_date) : null;
               const daysToExpiry = expiryDate
                 ? Math.ceil((expiryDate - new Date()) / (1000 * 60 * 60 * 24))
@@ -351,49 +329,43 @@ export default function ManagerDashboard({
                 <div
                   key={item.id}
                   style={{
-                    padding: '12px 14px',
-                    background: 'rgba(255, 255, 255, 0.02)',
-                    borderRadius: '10px',
-                    border: `1px solid ${isCritical ? 'rgba(244, 63, 94, 0.35)' : 'var(--border-color)'}`,
-                    transition: 'all 0.2s'
+                    padding: '10px 12px',
+                    background: 'var(--color-parchment)',
+                    borderRadius: 'var(--radius-md)',
+                    border: `1px solid ${isCritical ? 'rgba(207, 45, 86, 0.35)' : 'var(--color-stone)'}`
                   }}
                 >
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                      <span style={{ fontWeight: 600, color: '#f8fafc', fontSize: '0.88rem' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                      <span style={{ fontWeight: 500, color: 'var(--color-ink)', fontSize: '13px' }}>
                         {item.ingredients?.name}
                       </span>
-                      <span className={badgeClass} style={{ fontSize: '0.65rem', padding: '2px 6px', borderRadius: '4px', fontWeight: 700 }}>
+                      <span className={badgeClass}>
                         {statusLabel}
                       </span>
                     </div>
 
-                    <div style={{ textAlign: 'right' }}>
-                      <span style={{ fontWeight: 700, fontSize: '0.95rem', color: isCritical ? '#fb7185' : '#f8fafc' }}>
-                        {qty} {item.ingredients?.unit}
-                      </span>
-                    </div>
+                    <span style={{ fontWeight: 500, fontSize: '13px', color: isCritical ? 'var(--color-crimson)' : 'var(--color-ink)', fontFamily: 'var(--font-mono)' }}>
+                      {qty} {item.ingredients?.unit}
+                    </span>
                   </div>
 
-                  {/* Progress Bar */}
-                  <div style={{ width: '100%', height: '6px', background: 'rgba(255, 255, 255, 0.06)', borderRadius: '3px', overflow: 'hidden', margin: '6px 0' }}>
+                  <div style={{ width: '100%', height: '4px', background: 'var(--color-linen)', borderRadius: '2px', overflow: 'hidden', margin: '6px 0' }}>
                     <div
                       style={{
                         width: `${progressPct}%`,
                         height: '100%',
                         background: statusColor,
-                        borderRadius: '3px',
-                        transition: 'width 0.4s ease'
+                        borderRadius: '2px',
+                        transition: 'width 300ms ease'
                       }}
-                    ></div>
+                    />
                   </div>
 
-                  {/* Reorder and Expiry Details */}
-                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.72rem', color: '#94a3b8' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', color: 'var(--color-ash)', fontFamily: 'var(--font-mono)' }}>
                     <span>Threshold: {reorder} {item.ingredients?.unit}</span>
-                    <span style={{ display: 'flex', alignItems: 'center', gap: '4px', color: daysToExpiry <= 3 ? '#fb7185' : '#94a3b8' }}>
-                      <Clock size={12} />
-                      FEFO Expiry: {daysToExpiry > 0 ? `${daysToExpiry} days` : 'Expired'}
+                    <span style={{ color: daysToExpiry <= 3 ? 'var(--color-crimson)' : 'var(--color-ash)' }}>
+                      FEFO Expiry: {daysToExpiry > 0 ? `${daysToExpiry}d` : 'Expired'}
                     </span>
                   </div>
                 </div>
@@ -404,57 +376,51 @@ export default function ManagerDashboard({
 
       </div>
 
-      {/* Real-Time Redistribution Ping Action Center */}
-      <div className="glass-panel" style={{ padding: '24px' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '18px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-            <div style={{ width: '36px', height: '36px', borderRadius: '10px', background: 'rgba(6, 182, 212, 0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <Radar size={20} color="#06b6d4" />
-            </div>
-            <div>
-              <h3 style={{ fontSize: '1.15rem', fontWeight: 700, color: '#f8fafc' }}>
-                Autonomous Redistribution Ping Center
-              </h3>
-              <p style={{ fontSize: '0.8rem', color: '#94a3b8' }}>
-                Incoming stock fulfillment requests & active transfer tracking
-              </p>
-            </div>
+      {/* Autonomous Redistribution Ping Center */}
+      <div className="card-bone" style={{ padding: '20px' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: '14px', flexWrap: 'wrap', gap: '8px' }}>
+          <div>
+            <h3 style={{ fontSize: '17px', fontWeight: 500, color: 'var(--color-ink)' }}>
+              Autonomous Redistribution Ping Center
+            </h3>
+            <p style={{ fontSize: '12px', color: 'var(--color-driftwood)', marginTop: '2px' }}>
+              Incoming stock fulfillment requests & active transfer tracking
+            </p>
           </div>
 
-          <div style={{ display: 'flex', gap: '8px' }}>
-            <span className="badge-critical" style={{ padding: '4px 10px', borderRadius: '6px', fontSize: '0.75rem', fontWeight: 700 }}>
-              {incomingPings.length} Incoming Action Pings
+          <div style={{ display: 'flex', gap: '6px' }}>
+            <span className="badge-critical">
+              {incomingPings.length} Incoming
             </span>
-            <span className="badge-warning" style={{ padding: '4px 10px', borderRadius: '6px', fontSize: '0.75rem', fontWeight: 700 }}>
-              {outgoingPings.length} Outgoing Requests
+            <span className="badge-mono">
+              {outgoingPings.length} Outgoing
             </span>
           </div>
         </div>
 
-        {/* Pings Section Grid */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(360px, 1fr))', gap: '16px' }}>
+        <div className="ping-grid">
           
           {/* Incoming Pings (This store is requested to DONATE stock) */}
-          <div style={{ background: 'rgba(15, 23, 42, 0.5)', borderRadius: '12px', padding: '16px', border: '1px solid var(--border-color)' }}>
-            <h4 style={{ fontSize: '0.9rem', fontWeight: 700, color: '#f8fafc', marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '6px' }}>
-              <AlertTriangle size={16} color="#f43f5e" />
+          <div style={{ background: 'var(--color-parchment)', borderRadius: 'var(--radius-md)', padding: '14px', border: '1px solid var(--color-stone)' }}>
+            <h4 style={{ fontSize: '13px', fontWeight: 500, color: 'var(--color-ink)', marginBottom: '10px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <span style={{ color: 'var(--color-crimson)' }}>•</span>
               Incoming Fulfillment Requests (Action Required)
             </h4>
 
             {incomingPings.length === 0 ? (
-              <div style={{ textAlign: 'center', padding: '28px', color: '#64748b', fontSize: '0.85rem' }}>
-                No active incoming pings. This store is not currently needed as a donor.
+              <div style={{ textAlign: 'center', padding: '20px', color: 'var(--color-ash)', fontSize: '12px' }}>
+                No active incoming pings. Store is not currently designated as a donor.
               </div>
             ) : (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                 {incomingPings.map(ping => (
                   <div
                     key={ping.id}
                     style={{
-                      background: 'rgba(244, 63, 94, 0.08)',
-                      border: '1px solid rgba(244, 63, 94, 0.3)',
-                      borderRadius: '10px',
-                      padding: '14px',
+                      background: 'var(--color-bone)',
+                      border: '1px solid rgba(207, 45, 86, 0.3)',
+                      borderRadius: 'var(--radius-md)',
+                      padding: '12px',
                       display: 'flex',
                       flexDirection: 'column',
                       gap: '8px'
@@ -462,45 +428,44 @@ export default function ManagerDashboard({
                   >
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                       <div>
-                        <span style={{ fontSize: '0.72rem', color: '#f43f5e', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                          Critical Restock Ping
+                        <span className="badge-mono" style={{ fontSize: '10px', color: 'var(--color-crimson)' }}>
+                          CRITICAL SHORTAGE
                         </span>
-                        <div style={{ fontSize: '0.95rem', fontWeight: 700, color: '#f8fafc', marginTop: '2px' }}>
+                        <div style={{ fontSize: '14px', fontWeight: 500, color: 'var(--color-ink)', marginTop: '2px' }}>
                           {ping.to_store?.name}
                         </div>
-                        <div style={{ fontSize: '0.75rem', color: '#94a3b8' }}>
-                          Distance: <strong style={{ color: '#38bdf8' }}>{ping.distance_km || 2.5} km away</strong> (&lt; 10km radius)
+                        <div style={{ fontSize: '11px', color: 'var(--color-ash)', fontFamily: 'var(--font-mono)' }}>
+                          Distance: {ping.distance_km || 2.5} km (&lt; 10km geofence)
                         </div>
                       </div>
 
                       <div style={{ textAlign: 'right' }}>
-                        <span style={{ fontSize: '1.1rem', fontWeight: 800, color: '#fb7185' }}>
+                        <span style={{ fontSize: '14px', fontWeight: 500, color: 'var(--color-crimson)', fontFamily: 'var(--font-mono)' }}>
                           {ping.quantity} {ping.ingredient?.unit}
                         </span>
-                        <div style={{ fontSize: '0.75rem', color: '#e2e8f0', fontWeight: 600 }}>
+                        <div style={{ fontSize: '12px', color: 'var(--color-ink)' }}>
                           {ping.ingredient?.name}
                         </div>
                       </div>
                     </div>
 
-                    <div style={{ display: 'flex', gap: '8px', marginTop: '6px' }}>
+                    <div style={{ display: 'flex', gap: '6px', marginTop: '4px' }}>
                       <button
                         onClick={() => handleAcceptTransfer(ping.id)}
                         disabled={actionLoadingId === ping.id}
-                        className="btn-success"
-                        style={{ flex: 1, justifyContent: 'center', padding: '8px 12px', fontSize: '0.8rem' }}
+                        className="btn-forest"
+                        style={{ flex: 1, justifyContent: 'center' }}
                       >
-                        <CheckCircle size={14} />
+                        <Check size={13} />
                         <span>{actionLoadingId === ping.id ? 'Transferring...' : 'Accept & Dispatch Stock'}</span>
                       </button>
 
                       <button
                         onClick={() => handleRejectTransfer(ping.id)}
                         disabled={actionLoadingId === ping.id}
-                        className="btn-outline"
-                        style={{ padding: '8px 12px', fontSize: '0.8rem', color: '#94a3b8' }}
+                        className="btn-secondary"
                       >
-                        <XCircle size={14} />
+                        <X size={13} />
                         <span>Decline</span>
                       </button>
                     </div>
@@ -511,26 +476,26 @@ export default function ManagerDashboard({
           </div>
 
           {/* Outgoing Pings (This store is WAITING for stock) */}
-          <div style={{ background: 'rgba(15, 23, 42, 0.5)', borderRadius: '12px', padding: '16px', border: '1px solid var(--border-color)' }}>
-            <h4 style={{ fontSize: '0.9rem', fontWeight: 700, color: '#f8fafc', marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '6px' }}>
-              <Package size={16} color="#06b6d4" />
-              Outgoing Restock Requests (Waiting Fulfillment)
+          <div style={{ background: 'var(--color-parchment)', borderRadius: 'var(--radius-md)', padding: '14px', border: '1px solid var(--color-stone)' }}>
+            <h4 style={{ fontSize: '13px', fontWeight: 500, color: 'var(--color-ink)', marginBottom: '10px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <span style={{ color: 'var(--color-amber)' }}>•</span>
+              Outgoing Restock Requests (Awaiting Fulfillment)
             </h4>
 
             {outgoingPings.length === 0 ? (
-              <div style={{ textAlign: 'center', padding: '28px', color: '#64748b', fontSize: '0.85rem' }}>
-                No active outgoing pings. Store inventory is operating safely.
+              <div style={{ textAlign: 'center', padding: '20px', color: 'var(--color-ash)', fontSize: '12px' }}>
+                No active outgoing pings. Store inventory is operating above threshold.
               </div>
             ) : (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                 {outgoingPings.map(ping => (
                   <div
                     key={ping.id}
                     style={{
-                      background: 'rgba(6, 182, 212, 0.08)',
-                      border: '1px solid rgba(6, 182, 212, 0.3)',
-                      borderRadius: '10px',
-                      padding: '14px',
+                      background: 'var(--color-bone)',
+                      border: '1px solid var(--color-stone)',
+                      borderRadius: 'var(--radius-md)',
+                      padding: '12px',
                       display: 'flex',
                       flexDirection: 'column',
                       gap: '6px'
@@ -538,30 +503,28 @@ export default function ManagerDashboard({
                   >
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                       <div>
-                        <span style={{ fontSize: '0.72rem', color: '#38bdf8', fontWeight: 700, textTransform: 'uppercase' }}>
-                          Dispatched Ping
-                        </span>
-                        <div style={{ fontSize: '0.95rem', fontWeight: 700, color: '#f8fafc' }}>
+                        <span className="badge-mono" style={{ fontSize: '10px' }}>DISPATCHED PING</span>
+                        <div style={{ fontSize: '14px', fontWeight: 500, color: 'var(--color-ink)', marginTop: '2px' }}>
                           Donor: {ping.from_store?.name}
                         </div>
-                        <div style={{ fontSize: '0.75rem', color: '#94a3b8' }}>
-                          Distance: {ping.distance_km || 2.0} km away
+                        <div style={{ fontSize: '11px', color: 'var(--color-ash)', fontFamily: 'var(--font-mono)' }}>
+                          Distance: {ping.distance_km || 2.0} km
                         </div>
                       </div>
 
                       <div style={{ textAlign: 'right' }}>
-                        <span style={{ fontSize: '1rem', fontWeight: 700, color: '#22d3ee' }}>
+                        <span style={{ fontSize: '14px', fontWeight: 500, color: 'var(--color-forest)', fontFamily: 'var(--font-mono)' }}>
                           +{ping.quantity} {ping.ingredient?.unit}
                         </span>
-                        <div style={{ fontSize: '0.75rem', color: '#cbd5e1' }}>
+                        <div style={{ fontSize: '12px', color: 'var(--color-ink)' }}>
                           {ping.ingredient?.name}
                         </div>
                       </div>
                     </div>
 
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.75rem', color: '#f59e0b', marginTop: '4px' }}>
-                      <Clock size={14} />
-                      <span>Awaiting donor store manager acceptance...</span>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '11px', color: 'var(--color-driftwood)', fontFamily: 'var(--font-mono)', marginTop: '2px' }}>
+                      <Clock size={11} />
+                      <span>Awaiting partner branch dispatch</span>
                     </div>
                   </div>
                 ))}

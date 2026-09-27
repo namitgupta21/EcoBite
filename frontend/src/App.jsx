@@ -142,9 +142,9 @@ export default function App() {
 
   if (loading) {
     return (
-      <div style={{ height: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '16px' }}>
-        <div style={{ width: '48px', height: '48px', border: '3px solid rgba(6,182,212,0.2)', borderTopColor: '#06b6d4', borderRadius: '50%', animation: 'spin 1s linear infinite' }}></div>
-        <div style={{ fontSize: '1.1rem', fontWeight: 600, color: '#f8fafc' }}>
+      <div style={{ height: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '12px', background: 'var(--color-parchment)' }}>
+        <div style={{ width: '24px', height: '24px', border: '2px solid var(--color-stone)', borderTopColor: 'var(--color-ink)', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
+        <div style={{ fontSize: '13px', color: 'var(--color-driftwood)', fontFamily: 'var(--font-mono)' }}>
           Connecting to Autonomous Kitchen Network...
         </div>
       </div>

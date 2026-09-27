@@ -1,70 +1,95 @@
 import React from 'react';
-import { Store, Wifi, WifiOff, ShoppingCart, Radar, BarChart3, Sparkles } from 'lucide-react';
+import { Store, ShoppingCart, Radar, BarChart3 } from 'lucide-react';
 
 export default function Header({ stores, activeStore, onSelectStore, activeTab, setActiveTab, socketConnected, pendingPingsCount }) {
   return (
-    <header className="glass-panel" style={{ margin: '16px 24px', padding: '14px 24px' }}>
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '16px' }}>
+    <header style={{
+      borderBottom: '1px solid var(--color-stone)',
+      background: 'var(--color-parchment)',
+      padding: '12px 16px',
+      position: 'sticky',
+      top: 0,
+      zIndex: 100
+    }}>
+      <div className="header-container">
         
-        {/* Logo & System Brand */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
+        {/* Brand & Editorial Title */}
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <div style={{
+              width: '26px',
+              height: '26px',
+              borderRadius: 'var(--radius-md)',
+              background: 'var(--color-ink)',
+              color: 'var(--color-parchment)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              fontSize: '13px',
+              fontWeight: 500,
+              flexShrink: 0
+            }}>
+              ✦
+            </div>
+            <div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
+                <span style={{ fontSize: '15px', fontWeight: 500, color: 'var(--color-ink)', letterSpacing: '-0.015em' }}>
+                  Autonomous Kitchen
+                </span>
+                <span className="badge-mono" style={{ fontSize: '10px' }}>
+                  10KM GEOSPATIAL
+                </span>
+              </div>
+              <p style={{ fontSize: '11px', color: 'var(--color-ash)', margin: 0 }}>
+                Micro-Deduction &bull; FEFO Surplus Balancing
+              </p>
+            </div>
+          </div>
+
+          {/* Socket.IO Real-Time Indicator (Top-right on all screens) */}
           <div style={{
-            width: '44px',
-            height: '44px',
-            borderRadius: '12px',
-            background: 'linear-gradient(135deg, #06b6d4 0%, #3b82f6 100%)',
             display: 'flex',
             alignItems: 'center',
-            justifyContent: 'center',
-            boxShadow: '0 0 20px rgba(6, 182, 212, 0.4)'
+            gap: '5px',
+            fontSize: '11px',
+            fontFamily: 'var(--font-mono)',
+            color: 'var(--color-ash)',
+            background: 'var(--color-bone)',
+            padding: '3px 8px',
+            borderRadius: 'var(--radius-md)',
+            border: '1px solid var(--color-stone)'
           }}>
-            <Sparkles size={24} color="#ffffff" />
-          </div>
-          <div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <h1 style={{ fontSize: '1.25rem', fontWeight: 700, letterSpacing: '-0.02em', color: '#f8fafc' }}>
-                Autonomous Kitchen
-              </h1>
-              <span style={{
-                fontSize: '0.65rem',
-                fontWeight: 700,
-                textTransform: 'uppercase',
-                letterSpacing: '0.08em',
-                padding: '2px 8px',
-                borderRadius: '6px',
-                background: 'rgba(6, 182, 212, 0.15)',
-                color: '#22d3ee',
-                border: '1px solid rgba(6, 182, 212, 0.3)'
-              }}>
-                10km Micro-Redistribution
-              </span>
-            </div>
-            <p style={{ fontSize: '0.8rem', color: '#94a3b8' }}>
-              Real-time Recipe Deduction &bull; FEFO Geospatial Redistribution
-            </p>
+            <span style={{
+              width: '6px',
+              height: '6px',
+              borderRadius: '50%',
+              background: socketConnected ? 'var(--color-verdant)' : 'var(--color-crimson)',
+              display: 'inline-block'
+            }} />
+            <span>{socketConnected ? 'LIVE' : 'OFFLINE'}</span>
           </div>
         </div>
 
-        {/* Tab Navigation */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', background: 'rgba(15, 23, 42, 0.7)', padding: '4px', borderRadius: '12px', border: '1px solid var(--border-color)' }}>
+        {/* Navigation Tabs - Full width & horizontally scrollable on mobile */}
+        <nav className="header-nav">
           <button
             onClick={() => setActiveTab('pos')}
             style={{
               display: 'flex',
               alignItems: 'center',
               gap: '6px',
-              padding: '8px 16px',
-              borderRadius: '8px',
-              fontSize: '0.85rem',
-              fontWeight: 600,
+              padding: '6px 14px',
+              borderRadius: 'var(--radius-md)',
+              fontSize: '13px',
+              fontWeight: activeTab === 'pos' ? 500 : 400,
               cursor: 'pointer',
               border: 'none',
-              transition: 'all 0.2s',
-              background: activeTab === 'pos' ? 'linear-gradient(135deg, #06b6d4, #3b82f6)' : 'transparent',
-              color: activeTab === 'pos' ? '#ffffff' : '#94a3b8'
+              background: activeTab === 'pos' ? 'var(--color-ink)' : 'transparent',
+              color: activeTab === 'pos' ? 'var(--color-parchment)' : 'var(--color-driftwood)',
+              transition: 'all 150ms'
             }}
           >
-            <ShoppingCart size={16} />
+            <ShoppingCart size={13} />
             <span>POS Terminal</span>
           </button>
 
@@ -74,36 +99,29 @@ export default function Header({ stores, activeStore, onSelectStore, activeTab, 
               display: 'flex',
               alignItems: 'center',
               gap: '6px',
-              padding: '8px 16px',
-              borderRadius: '8px',
-              fontSize: '0.85rem',
-              fontWeight: 600,
+              padding: '6px 14px',
+              borderRadius: 'var(--radius-md)',
+              fontSize: '13px',
+              fontWeight: activeTab === 'manager' ? 500 : 400,
               cursor: 'pointer',
               border: 'none',
-              transition: 'all 0.2s',
               position: 'relative',
-              background: activeTab === 'manager' ? 'linear-gradient(135deg, #06b6d4, #3b82f6)' : 'transparent',
-              color: activeTab === 'manager' ? '#ffffff' : '#94a3b8'
+              background: activeTab === 'manager' ? 'var(--color-ink)' : 'transparent',
+              color: activeTab === 'manager' ? 'var(--color-parchment)' : 'var(--color-driftwood)',
+              transition: 'all 150ms'
             }}
           >
-            <Radar size={16} />
+            <Radar size={13} />
             <span>10km Radar & Manager</span>
             {pendingPingsCount > 0 && (
               <span style={{
-                position: 'absolute',
-                top: '-4px',
-                right: '-4px',
-                background: '#f43f5e',
-                color: '#ffffff',
-                fontSize: '0.65rem',
-                fontWeight: 700,
-                width: '18px',
-                height: '18px',
-                borderRadius: '50%',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                animation: 'pulse-border 1.5s infinite'
+                background: 'var(--color-crimson)',
+                color: 'var(--color-parchment)',
+                fontSize: '10px',
+                fontFamily: 'var(--font-mono)',
+                padding: '1px 5px',
+                borderRadius: 'var(--radius-sm)',
+                marginLeft: '3px'
               }}>
                 {pendingPingsCount}
               </span>
@@ -116,61 +134,42 @@ export default function Header({ stores, activeStore, onSelectStore, activeTab, 
               display: 'flex',
               alignItems: 'center',
               gap: '6px',
-              padding: '8px 16px',
-              borderRadius: '8px',
-              fontSize: '0.85rem',
-              fontWeight: 600,
+              padding: '6px 14px',
+              borderRadius: 'var(--radius-md)',
+              fontSize: '13px',
+              fontWeight: activeTab === 'analytics' ? 500 : 400,
               cursor: 'pointer',
               border: 'none',
-              transition: 'all 0.2s',
-              background: activeTab === 'analytics' ? 'linear-gradient(135deg, #06b6d4, #3b82f6)' : 'transparent',
-              color: activeTab === 'analytics' ? '#ffffff' : '#94a3b8'
+              background: activeTab === 'analytics' ? 'var(--color-ink)' : 'transparent',
+              color: activeTab === 'analytics' ? 'var(--color-parchment)' : 'var(--color-driftwood)',
+              transition: 'all 150ms'
             }}
           >
-            <BarChart3 size={16} />
-            <span>ESG & Analytics</span>
+            <BarChart3 size={13} />
+            <span>ESG Analytics</span>
           </button>
-        </div>
+        </nav>
 
-        {/* Store Selector & Socket Status */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
-          
-          {/* Active Store Switcher */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <Store size={18} color="#06b6d4" />
+        {/* Store Selector (Full width on mobile) */}
+        <div className="header-actions">
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', width: '100%' }}>
+            <Store size={14} color="var(--color-ash)" style={{ flexShrink: 0 }} />
             <select
               value={activeStore?.id || ''}
               onChange={(e) => {
                 const found = stores.find(s => s.id === e.target.value);
                 if (found) onSelectStore(found);
               }}
-              className="glass-input"
-              style={{ fontSize: '0.85rem', fontWeight: 500, cursor: 'pointer', minWidth: '220px' }}
+              className="input-parchment"
+              style={{ width: '100%', cursor: 'pointer' }}
             >
               {stores.map(store => (
-                <option key={store.id} value={store.id} style={{ background: '#111827', color: '#f8fafc' }}>
+                <option key={store.id} value={store.id}>
                   {store.name}
                 </option>
               ))}
             </select>
           </div>
-
-          {/* Real-time Socket Indicator */}
-          <div style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: '6px',
-            padding: '6px 12px',
-            borderRadius: '20px',
-            background: socketConnected ? 'rgba(16, 185, 129, 0.1)' : 'rgba(244, 63, 94, 0.1)',
-            border: `1px solid ${socketConnected ? 'rgba(16, 185, 129, 0.3)' : 'rgba(244, 63, 94, 0.3)'}`
-          }}>
-            {socketConnected ? <Wifi size={14} color="#10b981" /> : <WifiOff size={14} color="#f43f5e" />}
-            <span style={{ fontSize: '0.75rem', fontWeight: 600, color: socketConnected ? '#34d399' : '#fb7185' }}>
-              {socketConnected ? 'Live Socket.IO' : 'Disconnected'}
-            </span>
-          </div>
-
         </div>
 
       </div>

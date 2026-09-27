@@ -1,5 +1,5 @@
 import React from 'react';
-import { AlertTriangle, CheckCircle, X, MapPin } from 'lucide-react';
+import { Check, X, MapPin } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { api } from '../services/api';
 
@@ -9,7 +9,7 @@ export default function PingAlertModal({ ping, onClose, onAccepted }) {
   const handleAccept = async () => {
     try {
       await api.acceptTransfer(ping.id);
-      confetti({ particleCount: 60, spread: 70, origin: { y: 0.8 } });
+      confetti({ particleCount: 40, spread: 50, origin: { y: 0.8 } });
       if (onAccepted) onAccepted();
       onClose();
     } catch (err) {
@@ -21,34 +21,31 @@ export default function PingAlertModal({ ping, onClose, onAccepted }) {
     <div
       style={{
         position: 'fixed',
-        bottom: '24px',
-        right: '24px',
-        maxWidth: '420px',
-        width: '100%',
-        zIndex: 9999,
-        animation: 'slide-in-right 0.35s cubic-bezier(0.16, 1, 0.3, 1)'
+        bottom: '16px',
+        right: '16px',
+        maxWidth: '400px',
+        width: 'calc(100% - 32px)',
+        zIndex: 9999
       }}
     >
       <div
-        className="glass-panel"
+        className="card-bone"
         style={{
-          background: 'rgba(15, 23, 42, 0.95)',
-          border: '2px solid #f43f5e',
-          boxShadow: '0 0 35px rgba(244, 63, 94, 0.4)',
-          padding: '20px',
-          borderRadius: '16px'
+          padding: '16px',
+          borderRadius: 'var(--radius-lg)',
+          boxShadow: 'var(--shadow-xl)',
+          border: '1px solid var(--color-crimson)',
+          background: 'var(--color-bone)'
         }}
       >
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '10px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: 'rgba(244, 63, 94, 0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <AlertTriangle size={18} color="#f43f5e" />
-            </div>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '8px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <span style={{ color: 'var(--color-crimson)', fontSize: '14px' }}>🚨</span>
             <div>
-              <span style={{ fontSize: '0.7rem', fontWeight: 800, color: '#f43f5e', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
-                10km Geospatial Alert
+              <span className="badge-mono" style={{ fontSize: '10px', color: 'var(--color-crimson)' }}>
+                10KM GEOSPATIAL ALERT
               </span>
-              <h4 style={{ fontSize: '0.95rem', fontWeight: 700, color: '#f8fafc' }}>
+              <h4 style={{ fontSize: '14px', fontWeight: 500, color: 'var(--color-ink)', marginTop: '2px' }}>
                 Emergency Restock Ping
               </h4>
             </div>
@@ -56,40 +53,40 @@ export default function PingAlertModal({ ping, onClose, onAccepted }) {
 
           <button
             onClick={onClose}
-            style={{ background: 'none', border: 'none', color: '#64748b', cursor: 'pointer', padding: '4px' }}
+            className="btn-ghost"
+            style={{ padding: '2px', border: 'none', background: 'transparent' }}
           >
-            <X size={16} />
+            <X size={14} />
           </button>
         </div>
 
-        <div style={{ fontSize: '0.82rem', color: '#cbd5e1', lineHeight: 1.4, marginBottom: '14px' }}>
-          <strong style={{ color: '#ffffff' }}>{ping.to_store?.name}</strong> has experienced a critical stock depletion and requests:
-          <div style={{ background: 'rgba(255, 255, 255, 0.05)', borderRadius: '8px', padding: '8px 12px', marginTop: '8px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <span style={{ fontWeight: 600, color: '#38bdf8' }}>{ping.ingredient?.name}</span>
-            <span style={{ fontWeight: 800, color: '#fb7185', fontSize: '1rem' }}>
+        <div style={{ fontSize: '12px', color: 'var(--color-driftwood)', lineHeight: 1.4, marginBottom: '10px' }}>
+          <strong style={{ color: 'var(--color-ink)' }}>{ping.to_store?.name}</strong> has experienced a critical stock depletion and requests:
+          <div style={{ background: 'var(--color-linen)', borderRadius: 'var(--radius-md)', padding: '6px 10px', marginTop: '6px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', border: '1px solid var(--color-stone)' }}>
+            <span style={{ fontWeight: 500, color: 'var(--color-ink)' }}>{ping.ingredient?.name}</span>
+            <span style={{ fontWeight: 500, color: 'var(--color-crimson)', fontSize: '13px', fontFamily: 'var(--font-mono)' }}>
               {ping.quantity} {ping.ingredient?.unit}
             </span>
           </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '4px', marginTop: '8px', fontSize: '0.75rem', color: '#94a3b8' }}>
-            <MapPin size={12} color="#06b6d4" />
-            <span>Store Distance: <strong style={{ color: '#22d3ee' }}>{ping.distance_km || 2.5} km</strong> (Within 10km geofence)</span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '4px', marginTop: '6px', fontSize: '11px', color: 'var(--color-ash)', fontFamily: 'var(--font-mono)' }}>
+            <MapPin size={11} color="var(--color-ash)" />
+            <span>Distance: <strong>{ping.distance_km || 2.5} km</strong> (&lt; 10km geofence)</span>
           </div>
         </div>
 
-        <div style={{ display: 'flex', gap: '10px' }}>
+        <div style={{ display: 'flex', gap: '8px' }}>
           <button
             onClick={handleAccept}
-            className="btn-success"
-            style={{ flex: 1, justifyContent: 'center', padding: '10px', fontSize: '0.85rem' }}
+            className="btn-forest"
+            style={{ flex: 1, justifyContent: 'center' }}
           >
-            <CheckCircle size={16} />
+            <Check size={13} />
             <span>Accept & Transfer Stock</span>
           </button>
 
           <button
             onClick={onClose}
-            className="btn-outline"
-            style={{ padding: '10px 14px', fontSize: '0.85rem', color: '#94a3b8' }}
+            className="btn-secondary"
           >
             Ignore
           </button>
