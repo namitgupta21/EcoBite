@@ -12,6 +12,7 @@ import storeRoutes from './routes/storeRoutes.js';
 import orderRoutes from './routes/orderRoutes.js';
 import analyticsRoutes from './routes/analyticsRoutes.js';
 import recipeRoutes from './routes/recipeRoutes.js';
+import authRoutes from './routes/authRoutes.js';
 
 dotenv.config();
 
@@ -61,6 +62,7 @@ app.use('/api/stores', storeRoutes);
 app.use('/api/orders', orderRoutes);
 app.use('/api/analytics', analyticsRoutes);
 app.use('/api/recipes', recipeRoutes);
+app.use('/api/auth', authRoutes);
 
 app.get('/', (req, res) => {
   res.json({

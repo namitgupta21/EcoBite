@@ -4,23 +4,31 @@ import POSSimulator from './components/POSSimulator';
 import ManagerDashboard from './components/ManagerDashboard';
 import ESGAnalytics from './components/ESGAnalytics';
 import PingAlertModal from './components/PingAlertModal';
+import LoginPage from './components/LoginPage';
 import { api } from './services/api';
 import { socket, joinStoreRoom, leaveStoreRoom } from './services/socket';
 
 export default function App() {
+  const [currentUser, setCurrentUser] = useState(() => api.getCurrentUser());
   const [stores, setStores] = useState([]);
   const [activeStore, setActiveStore] = useState(null);
   const [menuItems, setMenuItems] = useState([]);
   const [recipes, setRecipes] = useState([]);
   const [inventory, setInventory] = useState([]);
   const [transferPings, setTransferPings] = useState([]);
-  const [activeTab, setActiveTab] = useState('pos'); // 'pos' | 'manager' | 'analytics'
+  const [activeTab, setActiveTab] = useState(() => {
+    const user = api.getCurrentUser();
+    return user?.role === 'manager' ? 'manager' : 'pos';
+  });
   const [socketConnected, setSocketConnected] = useState(socket.connected);
   const [incomingPingAlert, setIncomingPingAlert] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState(null);
 
   // 1. Initial Data Fetching
   const loadInitialData = async () => {
+    setLoading(true);
+    setLoadError(null);
     try {
       const [storesData, menuData, recipesData, pingsData] = await Promise.all([
         api.getStores(),
@@ -39,6 +47,7 @@ export default function App() {
       }
     } catch (err) {
       console.error('Failed to load initial system data:', err);
+      setLoadError(err.message || 'Failed to connect to backend server');
     } finally {
       setLoading(false);
     }
@@ -92,11 +101,10 @@ export default function App() {
 
     const onPingNewRequest = (newPing) => {
       console.log('🚨 Incoming Real-Time Transfer Ping:', newPing);
-      // Refresh transfer pings list
       api.getTransferPings().then(p => setTransferPings(p || []));
 
-      // If active store is the donor, display high-priority popup alert!
-      if (activeStore && newPing.from_store_id === activeStore.id) {
+      // Display high-priority popup alert ONLY if user is a manager and active store is donor
+      if (currentUser?.role === 'manager' && activeStore && newPing.from_store_id === activeStore.id) {
         setIncomingPingAlert(newPing);
       }
     };
@@ -128,7 +136,37 @@ export default function App() {
       socket.off('ping:broadcast');
       socket.off('transfer:completed', onTransferCompleted);
     };
-  }, [activeStore, loadStoreInventory]);
+  }, [activeStore, currentUser?.role, loadStoreInventory]);
+
+  // Role-based authentication handlers
+  const handleLoginSuccess = (user) => {
+    setCurrentUser(user);
+    if (user.role === 'manager') {
+      setActiveTab('manager');
+    } else {
+      setActiveTab('pos');
+    }
+  };
+
+  const handleLogout = () => {
+    api.logout();
+    setCurrentUser(null);
+    setIncomingPingAlert(null);
+    setActiveTab('pos');
+  };
+
+  // Tab switching handler
+  const handleSelectTab = (tab) => {
+    if (currentUser?.role === 'manager') {
+      // Manager can only toggle between manager and analytics
+      if (tab === 'manager' || tab === 'analytics') {
+        setActiveTab(tab);
+      }
+    } else {
+      // Customer is locked to POS
+      setActiveTab('pos');
+    }
+  };
 
   // Count pending pings relevant to active store
   const pendingPingsCount = transferPings.filter(
@@ -139,6 +177,11 @@ export default function App() {
     if (activeStore?.id) loadStoreInventory(activeStore.id);
     api.getTransferPings().then(p => setTransferPings(p || []));
   };
+
+  // If user is not authenticated, render the dedicated Login Page
+  if (!currentUser) {
+    return <LoginPage onLoginSuccess={handleLoginSuccess} />;
+  }
 
   if (loading) {
     return (
@@ -151,6 +194,8 @@ export default function App() {
     );
   }
 
+  const isManager = currentUser?.role === 'manager';
+
   return (
     <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
       
@@ -160,14 +205,57 @@ export default function App() {
         activeStore={activeStore}
         onSelectStore={(store) => setActiveStore(store)}
         activeTab={activeTab}
-        setActiveTab={setActiveTab}
+        setActiveTab={handleSelectTab}
         socketConnected={socketConnected}
         pendingPingsCount={pendingPingsCount}
+        currentUser={currentUser}
+        onLogout={handleLogout}
       />
 
-      {/* Main Tab Content */}
+      {/* Backend Connection Diagnostics Banner */}
+      {loadError && (
+        <div style={{
+          maxWidth: 'var(--page-max-width)',
+          margin: '16px auto 0',
+          padding: '0 24px',
+          width: '100%'
+        }}>
+          <div className="card-bone" style={{
+            padding: '16px 20px',
+            border: '1px solid var(--color-crimson)',
+            background: 'rgba(207, 45, 86, 0.05)',
+            borderRadius: 'var(--radius-md)'
+          }}>
+            <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '14px', flexWrap: 'wrap' }}>
+              <div style={{ flex: 1, minWidth: '260px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: 'var(--color-crimson)', fontWeight: 500, fontSize: '14px' }}>
+                  <span>⚠️</span>
+                  <span>Backend Service Connection Issue</span>
+                </div>
+                <p style={{ fontSize: '13px', color: 'var(--color-ink)', marginTop: '4px', lineHeight: 1.4 }}>
+                  {loadError}
+                </p>
+                <div style={{ fontSize: '11px', color: 'var(--color-driftwood)', fontFamily: 'var(--font-mono)', marginTop: '6px' }}>
+                  Target Backend: <strong>{api.getBackendUrl() || '(Empty — please configure VITE_BACKEND_URL in Vercel settings and redeploy)'}</strong>
+                </div>
+              </div>
+
+              <button
+                onClick={loadInitialData}
+                className="btn-primary"
+                style={{ padding: '6px 14px', fontSize: '12px' }}
+              >
+                Retry Connection
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Main Tab Content - Role-Segregated Views */}
       <main style={{ flex: 1 }}>
-        {activeTab === 'pos' && (
+        {/* Customer View: Strictly POS Terminal */}
+        {!isManager && (
           <POSSimulator
             menuItems={menuItems}
             recipes={recipes}
@@ -177,7 +265,8 @@ export default function App() {
           />
         )}
 
-        {activeTab === 'manager' && (
+        {/* Manager View: Strictly 10km Radar & Manager Dashboard and ESG Analytics */}
+        {isManager && activeTab === 'manager' && (
           <ManagerDashboard
             activeStore={activeStore}
             stores={stores}
@@ -187,20 +276,22 @@ export default function App() {
           />
         )}
 
-        {activeTab === 'analytics' && (
+        {isManager && activeTab === 'analytics' && (
           <ESGAnalytics />
         )}
       </main>
 
-      {/* Real-time Emergency Ping Notification Modal */}
-      <PingAlertModal
-        ping={incomingPingAlert}
-        onClose={() => setIncomingPingAlert(null)}
-        onAccepted={() => {
-          refreshAll();
-          setIncomingPingAlert(null);
-        }}
-      />
+      {/* Real-time Emergency Ping Notification Modal (Only visible to authenticated managers) */}
+      {isManager && (
+        <PingAlertModal
+          ping={incomingPingAlert}
+          onClose={() => setIncomingPingAlert(null)}
+          onAccepted={() => {
+            refreshAll();
+            setIncomingPingAlert(null);
+          }}
+        />
+      )}
 
     </div>
   );

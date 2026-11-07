@@ -1,4 +1,5 @@
 import { supabase } from "./Config/supabase.js";
+import { hashPassword } from "./utils/password.js";
 
 async function seed() {
   console.log("🌱 Starting Autonomous Kitchen Database Seeder...");
@@ -275,6 +276,45 @@ async function seed() {
 
     if (invErr) throw invErr;
     console.log(`✅ Populated ${invRows.length} inventory records across all stores.`);
+
+    // 6. Seed Users (if users table exists in Supabase)
+    console.log("👥 Checking Users table...");
+    try {
+      const defaultUsers = [
+        {
+          name: "Franchise Store Manager",
+          email: "manager@kitchen.local",
+          username: "manager",
+          password: "manager123",
+          role: "manager"
+        },
+        {
+          name: "Alex Rivera",
+          email: "alex@example.com",
+          username: "customer",
+          password: "customer123",
+          role: "customer"
+        }
+      ];
+
+      for (const u of defaultUsers) {
+        const { data: existing } = await supabase
+          .from("users")
+          .select("id")
+          .eq("username", u.username)
+          .maybeSingle();
+
+        if (!existing) {
+          await supabase.from("users").insert({
+            ...u,
+            password: hashPassword(u.password)
+          });
+          console.log(`✅ Seeded user with salted hash: ${u.username} (${u.role})`);
+        }
+      }
+    } catch (uErr) {
+      console.log("ℹ️ Users table not yet created in Supabase (run schema_users.sql to create it):", uErr.message);
+    }
 
     console.log("\n🎉 Database seeded successfully with realistic data!");
     console.log("Summary:");

@@ -1,0 +1,26 @@
+[
+  {
+    "id": "usr_mgr_01",
+    "name": "Franchise Store Manager",
+    "username": "manager",
+    "email": "manager@kitchen.local",
+    "password": "171dc8485aa80a359d9feaf7136556bc:e7b3632ead8022133b79317362f259d5ceeba75a71d4065f2df780b33a11f6c3e13612c7bf59ae1a106db38bc60926653cc6e69cb7e96e6c26979209b0cb33a2",
+    "role": "manager"
+  },
+  {
+    "id": "usr_cust_01",
+    "name": "Alex Rivera",
+    "username": "customer",
+    "email": "alex@example.com",
+    "password": "6b7b015b973ba49199d0db8c7bbe7643:01ba83b57666fec3d72707d30e287b921bb3dbf57b8c1ab52796c27fee73894d05ee5b3b4d012f2207d8b19fe044dfca9fa2c1d1f6d63a78afc6647a1ba2319a",
+    "role": "customer"
+  },
+  {
+    "id": "usr_staff_01",
+    "name": "Kitchen Shift Lead",
+    "username": "staff",
+    "email": "staff@kitchen.local",
+    "password": "480409ad4e29ca0432abbc3a7d7629e5:9f297c1edac63282bab60de2875107e769af96649c80191dc02f626c84cc18117334890ec77ffba578165f360ca84ee39160d3f4ee7f7fe60982127ed703f313",
+    "role": "manager"
+  }
+]
