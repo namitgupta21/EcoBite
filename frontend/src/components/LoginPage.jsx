@@ -5,7 +5,7 @@ import { api } from '../services/api';
 // Password requirement: min 8 chars, 1 uppercase, 1 lowercase, 1 number, 1 special char
 const PASSWORD_REGEX = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).{8,}$/;
 
-export default function LoginPage({ onLoginSuccess }) {
+export default function LoginPage({ onLoginSuccess, onBackToLanding }) {
   const [mode, setMode] = useState('signin'); // 'signin' | 'signup'
 
   // Sign In state
@@ -34,7 +34,7 @@ export default function LoginPage({ onLoginSuccess }) {
   const handleSignIn = async (e) => {
     if (e) e.preventDefault();
     if (!loginId.trim() || !loginPassword.trim()) {
-      setError('Please enter both your User ID / Username and Password.');
+      setError('Please enter both your Username / Email and Password.');
       return;
     }
 
@@ -124,44 +124,130 @@ export default function LoginPage({ onLoginSuccess }) {
     <div
       style={{
         minHeight: '100vh',
-        backgroundColor: 'var(--color-parchment)',
+        backgroundColor: 'var(--bg-base)',
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'center',
         justifyContent: 'center',
-        padding: '24px 16px'
+        padding: '32px 16px',
+        position: 'relative',
+        overflow: 'hidden'
       }}
     >
-      <div style={{ width: '100%', maxWidth: '440px' }}>
+      {/* Background Ambience / Glow circles */}
+      <div
+        style={{
+          position: 'absolute',
+          top: '-120px',
+          right: '-100px',
+          width: '320px',
+          height: '320px',
+          borderRadius: '50%',
+          background: 'radial-gradient(circle, rgba(34, 197, 94, 0.15) 0%, transparent 70%)',
+          pointerEvents: 'none'
+        }}
+      />
+      <div
+        style={{
+          position: 'absolute',
+          bottom: '-100px',
+          left: '-80px',
+          width: '280px',
+          height: '280px',
+          borderRadius: '50%',
+          background: 'radial-gradient(circle, rgba(27, 78, 43, 0.12) 0%, transparent 70%)',
+          pointerEvents: 'none'
+        }}
+      />
+
+      <div style={{ width: '100%', maxWidth: '440px', position: 'relative', zIndex: 1 }}>
         
+        {/* Back to Landing Page Link */}
+        {onBackToLanding && (
+          <div style={{ marginBottom: '16px' }}>
+            <button
+              type="button"
+              onClick={onBackToLanding}
+              style={{
+                background: 'none',
+                border: 'none',
+                color: '#52796f',
+                cursor: 'pointer',
+                fontSize: '12.5px',
+                fontWeight: 650,
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '5px',
+                padding: '4px 8px',
+                borderRadius: '6px',
+                transition: 'color 0.15s ease'
+              }}
+              onMouseEnter={(e) => e.currentTarget.style.color = '#1b4332'}
+              onMouseLeave={(e) => e.currentTarget.style.color = '#52796f'}
+            >
+              <span>←</span>
+              <span>Back to Landing Page</span>
+            </button>
+          </div>
+        )}
+
         {/* Brand Header */}
         <div style={{ textAlign: 'center', marginBottom: '24px' }}>
+          {/* Apple 3D Squircle Logo */}
           <div
             style={{
-              width: '42px',
-              height: '42px',
+              width: '46px',
+              height: '46px',
               margin: '0 auto 12px',
-              borderRadius: 'var(--radius-md)',
-              background: 'var(--color-ink)',
-              color: 'var(--color-parchment)',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              fontSize: '20px',
-              fontWeight: 500
+              filter: 'drop-shadow(0 6px 14px rgba(34, 197, 94, 0.35))'
             }}
           >
-            ✦
+            <svg viewBox="0 0 32 32" width="46" height="46" fill="none">
+              <defs>
+                <linearGradient id="login-logo-bg" x1="2" y1="2" x2="30" y2="30" gradientUnits="userSpaceOnUse">
+                  <stop offset="0%" stopColor="#4ade80" />
+                  <stop offset="50%" stopColor="#22c55e" />
+                  <stop offset="100%" stopColor="#15803d" />
+                </linearGradient>
+              </defs>
+              <rect x="1" y="1" width="30" height="30" rx="7.5" fill="url(#login-logo-bg)" />
+              <rect x="1" y="1" width="30" height="30" rx="7.5" stroke="rgba(255,255,255,0.7)" strokeWidth="1" />
+              <path d="M16 23 C16 18 19 12 24 9 C24 16 21 21 16 23 Z" fill="#ffffff" />
+              <path d="M16 23 C16 19 13.5 14 8.5 13 C8.5 18 11.5 21.5 16 23 Z" fill="#dcfce7" />
+              <circle cx="21" cy="14" r="1.3" fill="#ffffff" />
+            </svg>
           </div>
+
           <div style={{ display: 'inline-block', marginBottom: '4px' }}>
-            <span className="badge-mono" style={{ fontSize: '10px', letterSpacing: '0.06em' }}>
-              AUTONOMOUS KITCHEN NETWORK
+            <span
+              style={{
+                fontFamily: 'var(--font-script)',
+                fontSize: '22px',
+                color: '#2d6a4f',
+                fontWeight: 700,
+                display: 'block',
+                lineHeight: 1
+              }}
+            >
+              Fresh Farm-to-Fork
             </span>
           </div>
-          <h1 style={{ fontSize: '24px', fontWeight: 400, color: 'var(--color-ink)', letterSpacing: '-0.02em' }}>
-            {mode === 'signin' ? 'Welcome Back' : 'Create Customer Account'}
+
+          <h1
+            style={{
+              fontSize: '28px',
+              fontWeight: 800,
+              color: '#1b4332',
+              letterSpacing: '-0.03em',
+              lineHeight: 1.15
+            }}
+          >
+            {mode === 'signin' ? 'Autonomous Kitchen' : 'Create Customer Account'}
           </h1>
-          <p style={{ fontSize: '13px', color: 'var(--color-driftwood)', marginTop: '4px' }}>
+          <p style={{ fontSize: '13px', color: '#52796f', marginTop: '6px' }}>
             {mode === 'signin'
               ? 'Sign in to access your designated kitchen interface.'
               : 'Register once as a recurring diner to save orders and preferences.'}
@@ -170,23 +256,23 @@ export default function LoginPage({ onLoginSuccess }) {
 
         {/* Main Card */}
         <div
-          className="card-bone"
           style={{
-            padding: '24px',
-            borderRadius: 'var(--radius-lg)',
-            boxShadow: 'var(--shadow-card)',
-            border: '1px solid var(--color-stone)'
+            background: 'var(--surface)',
+            border: '1.2px solid rgba(27, 78, 43, 0.12)',
+            borderRadius: '24px',
+            padding: '28px 24px',
+            boxShadow: '0 16px 40px -8px rgba(27, 78, 43, 0.1), 0 2px 8px rgba(0, 0, 0, 0.02)'
           }}
         >
           {/* Mode Switcher Tabs */}
           <div
             style={{
               display: 'flex',
-              background: 'var(--color-linen)',
-              padding: '3px',
-              borderRadius: 'var(--radius-md)',
+              background: '#f1f5f9',
+              padding: '4px',
+              borderRadius: '12px',
               marginBottom: '20px',
-              border: '1px solid var(--color-stone)'
+              border: '1px solid var(--border)'
             }}
           >
             <button
@@ -195,15 +281,15 @@ export default function LoginPage({ onLoginSuccess }) {
               style={{
                 flex: 1,
                 padding: '8px',
-                fontSize: '12px',
-                fontWeight: mode === 'signin' ? 500 : 400,
+                fontSize: '12.5px',
+                fontWeight: mode === 'signin' ? 700 : 600,
                 border: 'none',
-                borderRadius: 'var(--radius-sm)',
-                background: mode === 'signin' ? 'var(--color-parchment)' : 'transparent',
-                color: mode === 'signin' ? 'var(--color-ink)' : 'var(--color-driftwood)',
-                boxShadow: mode === 'signin' ? 'rgba(0,0,0,0.05) 0px 1px 2px' : 'none',
+                borderRadius: '9px',
+                background: mode === 'signin' ? '#1b4e2b' : 'transparent',
+                color: mode === 'signin' ? '#ffffff' : '#64748b',
+                boxShadow: mode === 'signin' ? '0 4px 12px rgba(27, 78, 43, 0.25)' : 'none',
                 cursor: 'pointer',
-                transition: 'all 120ms'
+                transition: 'all 0.2s cubic-bezier(0.16, 1, 0.3, 1)'
               }}
             >
               Sign In
@@ -214,15 +300,15 @@ export default function LoginPage({ onLoginSuccess }) {
               style={{
                 flex: 1,
                 padding: '8px',
-                fontSize: '12px',
-                fontWeight: mode === 'signup' ? 500 : 400,
+                fontSize: '12.5px',
+                fontWeight: mode === 'signup' ? 700 : 600,
                 border: 'none',
-                borderRadius: 'var(--radius-sm)',
-                background: mode === 'signup' ? 'var(--color-parchment)' : 'transparent',
-                color: mode === 'signup' ? 'var(--color-ink)' : 'var(--color-driftwood)',
-                boxShadow: mode === 'signup' ? 'rgba(0,0,0,0.05) 0px 1px 2px' : 'none',
+                borderRadius: '9px',
+                background: mode === 'signup' ? '#1b4e2b' : 'transparent',
+                color: mode === 'signup' ? '#ffffff' : '#64748b',
+                boxShadow: mode === 'signup' ? '0 4px 12px rgba(27, 78, 43, 0.25)' : 'none',
                 cursor: 'pointer',
-                transition: 'all 120ms'
+                transition: 'all 0.2s cubic-bezier(0.16, 1, 0.3, 1)'
               }}
             >
               New Customer Sign-Up
@@ -236,13 +322,14 @@ export default function LoginPage({ onLoginSuccess }) {
                 display: 'flex',
                 alignItems: 'center',
                 gap: '8px',
-                background: 'rgba(31, 138, 101, 0.08)',
-                border: '1px solid var(--color-verdant)',
-                borderRadius: 'var(--radius-md)',
-                padding: '10px 12px',
+                background: '#dcfce7',
+                border: '1px solid #86efac',
+                borderRadius: '12px',
+                padding: '10px 14px',
                 marginBottom: '16px',
-                color: 'var(--color-verdant)',
-                fontSize: '12px'
+                color: '#15803d',
+                fontSize: '12.5px',
+                fontWeight: 600
               }}
             >
               <span>✓</span>
@@ -257,13 +344,14 @@ export default function LoginPage({ onLoginSuccess }) {
                 display: 'flex',
                 alignItems: 'center',
                 gap: '8px',
-                background: 'rgba(207, 45, 86, 0.08)',
-                border: '1px solid var(--color-crimson)',
-                borderRadius: 'var(--radius-md)',
-                padding: '10px 12px',
+                background: '#fef2f2',
+                border: '1px solid #fecaca',
+                borderRadius: '12px',
+                padding: '10px 14px',
                 marginBottom: '16px',
-                color: 'var(--color-crimson)',
-                fontSize: '12px'
+                color: '#dc2626',
+                fontSize: '12.5px',
+                fontWeight: 500
               }}
             >
               <span>⚠️</span>
@@ -275,11 +363,11 @@ export default function LoginPage({ onLoginSuccess }) {
           {mode === 'signin' && (
             <form onSubmit={handleSignIn} style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
               <div>
-                <label style={{ display: 'block', fontSize: '12px', fontWeight: 500, color: 'var(--color-ink)', marginBottom: '5px' }}>
-                  User ID / Username / Email
+                <label style={{ display: 'block', fontSize: '12px', fontWeight: 650, color: '#1b4332', marginBottom: '6px' }}>
+                  Username / Email
                 </label>
                 <div style={{ position: 'relative' }}>
-                  <div style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--color-ash)', pointerEvents: 'none' }}>
+                  <div style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: '#6b8f7e', pointerEvents: 'none' }}>
                     <User size={15} />
                   </div>
                   <input
@@ -289,17 +377,17 @@ export default function LoginPage({ onLoginSuccess }) {
                     placeholder="e.g. customer, manager, or your email"
                     required
                     className="input-parchment"
-                    style={{ width: '100%', paddingLeft: '36px', height: '38px', fontSize: '13px' }}
+                    style={{ width: '100%', paddingLeft: '36px', height: '40px', fontSize: '13px' }}
                   />
                 </div>
               </div>
 
               <div>
-                <label style={{ display: 'block', fontSize: '12px', fontWeight: 500, color: 'var(--color-ink)', marginBottom: '5px' }}>
+                <label style={{ display: 'block', fontSize: '12px', fontWeight: 650, color: '#1b4332', marginBottom: '6px' }}>
                   Password
                 </label>
                 <div style={{ position: 'relative' }}>
-                  <div style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--color-ash)', pointerEvents: 'none' }}>
+                  <div style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: '#6b8f7e', pointerEvents: 'none' }}>
                     <Lock size={15} />
                   </div>
                   <input
@@ -309,12 +397,12 @@ export default function LoginPage({ onLoginSuccess }) {
                     placeholder="Enter password"
                     required
                     className="input-parchment"
-                    style={{ width: '100%', paddingLeft: '36px', paddingRight: '36px', height: '38px', fontSize: '13px' }}
+                    style={{ width: '100%', paddingLeft: '36px', paddingRight: '36px', height: '40px', fontSize: '13px' }}
                   />
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    style={{ position: 'absolute', right: '10px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', color: 'var(--color-ash)', cursor: 'pointer' }}
+                    style={{ position: 'absolute', right: '10px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', color: '#6b8f7e', cursor: 'pointer' }}
                   >
                     {showPassword ? <EyeOff size={15} /> : <Eye size={15} />}
                   </button>
@@ -325,10 +413,10 @@ export default function LoginPage({ onLoginSuccess }) {
                 type="submit"
                 disabled={loading}
                 className="btn-primary"
-                style={{ width: '100%', height: '40px', justifyContent: 'center', marginTop: '6px', fontSize: '13px', fontWeight: 500 }}
+                style={{ width: '100%', height: '42px', justifyContent: 'center', marginTop: '6px', fontSize: '13.5px' }}
               >
                 {loading ? (
-                  <div style={{ width: '15px', height: '15px', border: '2px solid var(--color-parchment)', borderTopColor: 'transparent', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
+                  <div style={{ width: '15px', height: '15px', border: '2px solid #ffffff', borderTopColor: 'transparent', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
                 ) : (
                   <>
                     <span>Sign In</span>
@@ -337,10 +425,10 @@ export default function LoginPage({ onLoginSuccess }) {
                 )}
               </button>
 
-              <div style={{ display: 'flex', alignItems: 'center', gap: '10px', margin: '14px 0', color: 'var(--color-ash)', fontSize: '11px', textTransform: 'uppercase' }}>
-                <div style={{ flex: 1, height: '1px', background: 'var(--color-stone)' }} />
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px', margin: '14px 0', color: '#94a3b8', fontSize: '11px', textTransform: 'uppercase' }}>
+                <div style={{ flex: 1, height: '1px', background: 'var(--border)' }} />
                 <span>Or</span>
-                <div style={{ flex: 1, height: '1px', background: 'var(--color-stone)' }} />
+                <div style={{ flex: 1, height: '1px', background: 'var(--border)' }} />
               </div>
 
               <button
@@ -348,7 +436,7 @@ export default function LoginPage({ onLoginSuccess }) {
                 onClick={handleGuestLogin}
                 disabled={loading}
                 className="btn-secondary"
-                style={{ width: '100%', height: '38px', justifyContent: 'center', fontSize: '12px', fontWeight: 500, gap: '6px' }}
+                style={{ width: '100%', height: '40px', justifyContent: 'center', fontSize: '12.5px', gap: '6px' }}
               >
                 <ShoppingBag size={14} />
                 <span>Continue as Guest Customer</span>
@@ -360,7 +448,7 @@ export default function LoginPage({ onLoginSuccess }) {
           {mode === 'signup' && (
             <form onSubmit={handleSignUp} style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
               <div>
-                <label style={{ display: 'block', fontSize: '12px', fontWeight: 500, color: 'var(--color-ink)', marginBottom: '4px' }}>
+                <label style={{ display: 'block', fontSize: '12px', fontWeight: 650, color: '#1b4332', marginBottom: '4px' }}>
                   Full Name *
                 </label>
                 <input
@@ -370,13 +458,13 @@ export default function LoginPage({ onLoginSuccess }) {
                   placeholder="e.g. Jane Doe"
                   required
                   className="input-parchment"
-                  style={{ width: '100%', height: '36px', fontSize: '13px' }}
+                  style={{ width: '100%', height: '38px', fontSize: '13px' }}
                 />
               </div>
 
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
                 <div>
-                  <label style={{ display: 'block', fontSize: '12px', fontWeight: 500, color: 'var(--color-ink)', marginBottom: '4px' }}>
+                  <label style={{ display: 'block', fontSize: '12px', fontWeight: 650, color: '#1b4332', marginBottom: '4px' }}>
                     Username *
                   </label>
                   <input
@@ -386,12 +474,12 @@ export default function LoginPage({ onLoginSuccess }) {
                     placeholder="e.g. janedoe"
                     required
                     className="input-parchment"
-                    style={{ width: '100%', height: '36px', fontSize: '13px' }}
+                    style={{ width: '100%', height: '38px', fontSize: '13px' }}
                   />
                 </div>
 
                 <div>
-                  <label style={{ display: 'block', fontSize: '12px', fontWeight: 500, color: 'var(--color-ink)', marginBottom: '4px' }}>
+                  <label style={{ display: 'block', fontSize: '12px', fontWeight: 650, color: '#1b4332', marginBottom: '4px' }}>
                     Email
                   </label>
                   <input
@@ -400,13 +488,13 @@ export default function LoginPage({ onLoginSuccess }) {
                     onChange={(e) => setSignupEmail(e.target.value)}
                     placeholder="jane@example.com"
                     className="input-parchment"
-                    style={{ width: '100%', height: '36px', fontSize: '13px' }}
+                    style={{ width: '100%', height: '38px', fontSize: '13px' }}
                   />
                 </div>
               </div>
 
               <div>
-                <label style={{ display: 'block', fontSize: '12px', fontWeight: 500, color: 'var(--color-ink)', marginBottom: '4px' }}>
+                <label style={{ display: 'block', fontSize: '12px', fontWeight: 650, color: '#1b4332', marginBottom: '4px' }}>
                   Password *
                 </label>
                 <div style={{ position: 'relative' }}>
@@ -417,27 +505,27 @@ export default function LoginPage({ onLoginSuccess }) {
                     placeholder="Min 8 chars (upper, lower, digit, special)"
                     required
                     className="input-parchment"
-                    style={{ width: '100%', paddingRight: '36px', height: '36px', fontSize: '13px' }}
+                    style={{ width: '100%', paddingRight: '36px', height: '38px', fontSize: '13px' }}
                   />
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    style={{ position: 'absolute', right: '10px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', color: 'var(--color-ash)', cursor: 'pointer' }}
+                    style={{ position: 'absolute', right: '10px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', color: '#6b8f7e', cursor: 'pointer' }}
                   >
                     {showPassword ? <EyeOff size={15} /> : <Eye size={15} />}
                   </button>
                 </div>
-                <div style={{ fontSize: '11px', color: 'var(--color-ash)', marginTop: '3px' }}>
+                <div style={{ fontSize: '11px', color: '#6b8f7e', marginTop: '3px' }}>
                   Requirements: 1 uppercase, 1 lowercase, 1 number, 1 special character (min 8 chars)
                 </div>
               </div>
 
               <div>
-                <label style={{ display: 'block', fontSize: '12px', fontWeight: 500, color: 'var(--color-ink)', marginBottom: '4px' }}>
+                <label style={{ display: 'block', fontSize: '12px', fontWeight: 650, color: '#1b4332', marginBottom: '4px' }}>
                   Contact Phone (Optional)
                 </label>
                 <div style={{ position: 'relative' }}>
-                  <div style={{ position: 'absolute', left: '10px', top: '50%', transform: 'translateY(-50%)', color: 'var(--color-ash)', pointerEvents: 'none' }}>
+                  <div style={{ position: 'absolute', left: '10px', top: '50%', transform: 'translateY(-50%)', color: '#6b8f7e', pointerEvents: 'none' }}>
                     <Phone size={13} />
                   </div>
                   <input
@@ -449,10 +537,10 @@ export default function LoginPage({ onLoginSuccess }) {
                     onChange={handlePhoneChange}
                     placeholder="10-digit mobile number (digits only)"
                     className="input-parchment"
-                    style={{ width: '100%', paddingLeft: '30px', height: '36px', fontSize: '13px' }}
+                    style={{ width: '100%', paddingLeft: '30px', height: '38px', fontSize: '13px' }}
                   />
                 </div>
-                <div style={{ fontSize: '11px', color: 'var(--color-ash)', marginTop: '3px' }}>
+                <div style={{ fontSize: '11px', color: '#6b8f7e', marginTop: '3px' }}>
                   Optional &bull; Numeric only (strictly 10 digits)
                 </div>
               </div>
@@ -461,10 +549,10 @@ export default function LoginPage({ onLoginSuccess }) {
                 type="submit"
                 disabled={loading}
                 className="btn-primary"
-                style={{ width: '100%', height: '40px', justifyContent: 'center', marginTop: '6px', fontSize: '13px', fontWeight: 500 }}
+                style={{ width: '100%', height: '42px', justifyContent: 'center', marginTop: '6px', fontSize: '13.5px' }}
               >
                 {loading ? (
-                  <div style={{ width: '15px', height: '15px', border: '2px solid var(--color-parchment)', borderTopColor: 'transparent', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
+                  <div style={{ width: '15px', height: '15px', border: '2px solid #ffffff', borderTopColor: 'transparent', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
                 ) : (
                   <>
                     <UserPlus size={14} />
@@ -472,19 +560,6 @@ export default function LoginPage({ onLoginSuccess }) {
                   </>
                 )}
               </button>
-
-              <div style={{ textAlign: 'center', marginTop: '8px' }}>
-                <span style={{ fontSize: '12px', color: 'var(--color-driftwood)' }}>
-                  Already registered?{' '}
-                  <button
-                    type="button"
-                    onClick={() => { setMode('signin'); setError(null); }}
-                    style={{ background: 'none', border: 'none', color: 'var(--color-ember)', cursor: 'pointer', textDecoration: 'underline', fontSize: '12px' }}
-                  >
-                    Sign in here
-                  </button>
-                </span>
-              </div>
             </form>
           )}
 
@@ -494,10 +569,10 @@ export default function LoginPage({ onLoginSuccess }) {
               style={{
                 marginTop: '20px',
                 paddingTop: '14px',
-                borderTop: '1px solid var(--color-stone)'
+                borderTop: '1px solid var(--border)'
               }}
             >
-              <div style={{ fontSize: '11px', color: 'var(--color-driftwood)', marginBottom: '8px', fontWeight: 500 }}>
+              <div style={{ fontSize: '11.5px', color: '#52796f', marginBottom: '8px', fontWeight: 650 }}>
                 Pre-Seeded Database Accounts:
               </div>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
@@ -507,10 +582,10 @@ export default function LoginPage({ onLoginSuccess }) {
                   disabled={loading}
                   className="btn-ghost"
                   style={{
-                    padding: '8px 10px',
-                    borderRadius: 'var(--radius-md)',
-                    border: '1px solid var(--color-stone)',
-                    background: 'var(--color-parchment)',
+                    padding: '8px 12px',
+                    borderRadius: '12px',
+                    border: '1px solid var(--border)',
+                    background: '#f8fafc',
                     display: 'flex',
                     flexDirection: 'column',
                     alignItems: 'flex-start',
@@ -518,11 +593,11 @@ export default function LoginPage({ onLoginSuccess }) {
                     textAlign: 'left'
                   }}
                 >
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '11px', fontWeight: 500, color: 'var(--color-ink)' }}>
-                    <User size={11} color="var(--color-ink)" />
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '11.5px', fontWeight: 700, color: '#1b4332' }}>
+                    <User size={12} color="#1b4332" />
                     <span>Customer</span>
                   </div>
-                  <div style={{ fontSize: '10px', color: 'var(--color-driftwood)', fontFamily: 'var(--font-mono)' }}>
+                  <div style={{ fontSize: '10px', color: '#64748b', fontFamily: 'var(--font-mono)' }}>
                     POS Menu Only
                   </div>
                 </button>
@@ -533,10 +608,10 @@ export default function LoginPage({ onLoginSuccess }) {
                   disabled={loading}
                   className="btn-ghost"
                   style={{
-                    padding: '8px 10px',
-                    borderRadius: 'var(--radius-md)',
-                    border: '1px solid var(--color-stone)',
-                    background: 'var(--color-parchment)',
+                    padding: '8px 12px',
+                    borderRadius: '12px',
+                    border: '1px solid #bbf7d0',
+                    background: '#f0fdf4',
                     display: 'flex',
                     flexDirection: 'column',
                     alignItems: 'flex-start',
@@ -544,11 +619,11 @@ export default function LoginPage({ onLoginSuccess }) {
                     textAlign: 'left'
                   }}
                 >
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '11px', fontWeight: 500, color: 'var(--color-ink)' }}>
-                    <ShieldCheck size={11} color="var(--color-forest)" />
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '11.5px', fontWeight: 700, color: '#15803d' }}>
+                    <ShieldCheck size={12} color="#15803d" />
                     <span>Manager</span>
                   </div>
-                  <div style={{ fontSize: '10px', color: 'var(--color-driftwood)', fontFamily: 'var(--font-mono)' }}>
+                  <div style={{ fontSize: '10px', color: '#166534', fontFamily: 'var(--font-mono)' }}>
                     Radar & Analytics
                   </div>
                 </button>
@@ -557,11 +632,6 @@ export default function LoginPage({ onLoginSuccess }) {
           )}
 
         </div>
-
-        {/* Database Persistence Footer Note */}
-        <p style={{ textAlign: 'center', fontSize: '11px', color: 'var(--color-ash)', marginTop: '20px' }}>
-          Autonomous Kitchen Network &bull; Supabase Database Backed
-        </p>
 
       </div>
     </div>

@@ -18,79 +18,65 @@ export default function PingAlertModal({ ping, onClose, onAccepted }) {
   };
 
   return (
-    <div
-      style={{
-        position: 'fixed',
-        bottom: '16px',
-        right: '16px',
-        maxWidth: '400px',
-        width: 'calc(100% - 32px)',
-        zIndex: 9999
-      }}
-    >
-      <div
-        className="card-bone"
-        style={{
-          padding: '16px',
-          borderRadius: 'var(--radius-lg)',
-          boxShadow: 'var(--shadow-xl)',
-          border: '1px solid var(--color-crimson)',
-          background: 'var(--color-bone)'
-        }}
-      >
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '8px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-            <span style={{ color: 'var(--color-crimson)', fontSize: '14px' }}>🚨</span>
+    <div className="emergency-ping-card">
+      <div className="ping-card-inner">
+        
+        <div className="ping-card-header">
+          <div className="ping-header-left">
+            <span className="ping-siren">🚨</span>
             <div>
-              <span className="badge-mono" style={{ fontSize: '10px', color: 'var(--color-crimson)' }}>
-                10KM GEOSPATIAL ALERT
-              </span>
-              <h4 style={{ fontSize: '14px', fontWeight: 500, color: 'var(--color-ink)', marginTop: '2px' }}>
-                Emergency Restock Ping
-              </h4>
+              <span className="ping-badge-tag">10KM GEOSPATIAL ALERT</span>
+              <h4 className="ping-title">Emergency Restock Ping</h4>
             </div>
           </div>
 
           <button
+            type="button"
             onClick={onClose}
-            className="btn-ghost"
-            style={{ padding: '2px', border: 'none', background: 'transparent' }}
+            className="ping-close-x"
+            aria-label="Close alert"
           >
-            <X size={14} />
+            <X size={13} />
           </button>
         </div>
 
-        <div style={{ fontSize: '12px', color: 'var(--color-driftwood)', lineHeight: 1.4, marginBottom: '10px' }}>
-          <strong style={{ color: 'var(--color-ink)' }}>{ping.to_store?.name}</strong> has experienced a critical stock depletion and requests:
-          <div style={{ background: 'var(--color-linen)', borderRadius: 'var(--radius-md)', padding: '6px 10px', marginTop: '6px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', border: '1px solid var(--color-stone)' }}>
-            <span style={{ fontWeight: 500, color: 'var(--color-ink)' }}>{ping.ingredient?.name}</span>
-            <span style={{ fontWeight: 500, color: 'var(--color-crimson)', fontSize: '13px', fontFamily: 'var(--font-mono)' }}>
+        <div className="ping-card-body">
+          <p className="ping-lead-text">
+            <strong>{ping.to_store?.name}</strong> has experienced a critical stock depletion and requests immediate surplus rebalancing:
+          </p>
+
+          <div className="ping-ingredient-chip">
+            <span className="ping-ing-name">{ping.ingredient?.name}</span>
+            <span className="ping-ing-qty">
               {ping.quantity} {ping.ingredient?.unit}
             </span>
           </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '4px', marginTop: '6px', fontSize: '11px', color: 'var(--color-ash)', fontFamily: 'var(--font-mono)' }}>
-            <MapPin size={11} color="var(--color-ash)" />
+
+          <div className="ping-meta-row">
+            <MapPin size={12} color="#6b7280" />
             <span>Distance: <strong>{ping.distance_km || 2.5} km</strong> (&lt; 10km geofence)</span>
           </div>
         </div>
 
-        <div style={{ display: 'flex', gap: '8px' }}>
+        <div className="ping-action-row">
           <button
+            type="button"
             onClick={handleAccept}
-            className="btn-forest"
-            style={{ flex: 1, justifyContent: 'center' }}
+            className="btn-ping-accept"
           >
-            <Check size={13} />
+            <Check size={13} style={{ display: 'inline', marginRight: '4px' }} />
             <span>Accept & Transfer Stock</span>
           </button>
 
           <button
+            type="button"
             onClick={onClose}
-            className="btn-secondary"
+            className="btn-ping-ignore"
           >
             Ignore
           </button>
         </div>
+
       </div>
     </div>
   );

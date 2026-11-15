@@ -5,11 +5,16 @@ import ManagerDashboard from './components/ManagerDashboard';
 import ESGAnalytics from './components/ESGAnalytics';
 import PingAlertModal from './components/PingAlertModal';
 import LoginPage from './components/LoginPage';
+import LandingPage from './components/LandingPage';
 import { api } from './services/api';
 import { socket, joinStoreRoom, leaveStoreRoom } from './services/socket';
 
 export default function App() {
   const [currentUser, setCurrentUser] = useState(() => api.getCurrentUser());
+  const [currentView, setCurrentView] = useState(() => {
+    const user = api.getCurrentUser();
+    return user ? 'app' : 'landing';
+  });
   const [stores, setStores] = useState([]);
   const [activeStore, setActiveStore] = useState(null);
   const [menuItems, setMenuItems] = useState([]);
@@ -146,6 +151,7 @@ export default function App() {
     } else {
       setActiveTab('pos');
     }
+    setCurrentView('app');
   };
 
   const handleLogout = () => {
@@ -153,6 +159,7 @@ export default function App() {
     setCurrentUser(null);
     setIncomingPingAlert(null);
     setActiveTab('pos');
+    setCurrentView('landing');
   };
 
   // Tab switching handler
@@ -178,9 +185,32 @@ export default function App() {
     api.getTransferPings().then(p => setTransferPings(p || []));
   };
 
-  // If user is not authenticated, render the dedicated Login Page
-  if (!currentUser) {
-    return <LoginPage onLoginSuccess={handleLoginSuccess} />;
+  // 1. Landing Page View (accessible to both logged out visitors and logged in operators)
+  if (currentView === 'landing') {
+    return (
+      <LandingPage
+        currentUser={currentUser}
+        onLaunchApp={() => {
+          if (currentUser) {
+            setCurrentView('app');
+          } else {
+            setCurrentView('login');
+          }
+        }}
+        onOpenLogin={() => setCurrentView('login')}
+        onLogout={handleLogout}
+      />
+    );
+  }
+
+  // 2. Authentication Login Page View
+  if (currentView === 'login' || !currentUser) {
+    return (
+      <LoginPage
+        onLoginSuccess={handleLoginSuccess}
+        onBackToLanding={() => setCurrentView('landing')}
+      />
+    );
   }
 
   if (loading) {
@@ -210,6 +240,7 @@ export default function App() {
         pendingPingsCount={pendingPingsCount}
         currentUser={currentUser}
         onLogout={handleLogout}
+        onGoLanding={() => setCurrentView('landing')}
       />
 
       {/* Backend Connection Diagnostics Banner */}
