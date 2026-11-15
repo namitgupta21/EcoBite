@@ -227,7 +227,7 @@ export default function App() {
   const isManager = currentUser?.role === 'manager';
 
   return (
-    <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
+    <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', width: '100%', maxWidth: '100%', overflowX: 'hidden' }}>
       
       {/* Global Application Header */}
       <Header
@@ -284,7 +284,7 @@ export default function App() {
       )}
 
       {/* Main Tab Content - Role-Segregated Views */}
-      <main style={{ flex: 1 }}>
+      <main style={{ flex: 1, minWidth: 0, width: '100%', maxWidth: '100%' }}>
         {/* Customer View: Strictly POS Terminal */}
         {!isManager && (
           <POSSimulator

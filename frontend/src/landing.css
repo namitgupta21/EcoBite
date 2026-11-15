@@ -64,6 +64,9 @@
     -moz-osx-font-smoothing: grayscale;
     font-feature-settings: 'kern' 1, 'liga' 1;
     min-height: 100vh;
+    width: 100%;
+    max-width: 100vw;
+    overflow-x: hidden;
 }
 
 /* ── NAVBAR ── */
@@ -1912,7 +1915,7 @@
 @media (max-width: 768px) {
     .nav-links--left { display: none; }
     .nav-links--right .btn-ghost { display: none; }
-    .nav-inner { grid-template-columns: 1fr auto; }
+    .nav-inner { grid-template-columns: 1fr auto; padding: 0 16px; }
     .nav-links--right { gap: 4px; }
     
     .floating-badge { display: none; }

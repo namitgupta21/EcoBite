@@ -66,6 +66,24 @@
   padding: 0;
 }
 
+html, body {
+  width: 100%;
+  max-width: 100vw;
+  overflow-x: hidden;
+  margin: 0;
+  padding: 0;
+  -webkit-text-size-adjust: 100%;
+}
+
+#root {
+  width: 100%;
+  max-width: 100vw;
+  overflow-x: hidden;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
 body {
   font-family: var(--font-sans);
   background-color: var(--bg-base);
@@ -222,13 +240,26 @@ h1, h2, h3, h4, h5, h6 {
   margin: 0 auto;
   padding: 24px;
   width: 100%;
+  box-sizing: border-box;
 }
 
+.pos-layout,
 .pos-layout-grid {
   display: grid;
   grid-template-columns: 1fr 390px;
   gap: 24px;
   align-items: start;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+}
+
+.pos-catalog-section {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
 }
 
 /* Leaflet Map isolation & Topbar z-index containment */
@@ -255,7 +286,13 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 @media (max-width: 1024px) {
-  .pos-layout-grid {
+  .pos-layout-grid,
+  .pos-layout {
     grid-template-columns: 1fr;
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
   }
 }

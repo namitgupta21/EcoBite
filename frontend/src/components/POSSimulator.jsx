@@ -694,7 +694,7 @@ export default function POSSimulator({ menuItems, recipes, inventory, activeStor
                         <h5>{item.name}</h5>
                         <div className="cart-item-price">₹{item.price} &times; {qty}</div>
                       </div>
-                      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '4px' }}>
+                      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '4px', flexShrink: 0 }}>
                         <span style={{ fontSize: '13px', fontWeight: 750, fontFamily: 'var(--font-mono)', color: 'var(--text-primary)' }}>
                           ₹{subtotal}
                         </span>
