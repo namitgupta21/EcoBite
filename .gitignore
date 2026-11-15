@@ -35,3 +35,8 @@ pnpm-debug.log*
 *.swp
 *.swo
 *.code-workspace
+
+# Local Design Docs
+design.md
+*/design.md
+
