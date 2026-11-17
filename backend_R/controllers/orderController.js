@@ -121,14 +121,16 @@ export const processOrder = async (req, res) => {
         });
       }
 
-      // Check if stock is critical (<= reorder_level)
-      if (newStock <= reorderLevel) {
+      // Check if stock is critical (<= reorder_level or expired stock)
+      const isExpired = Boolean(invRecord?.expiry_date && new Date(invRecord.expiry_date) <= new Date());
+      if (newStock <= reorderLevel || isExpired) {
         criticalAlerts.push({
           ingredient_id: ingredientId,
           name: ingredientName,
           remaining_stock: newStock,
           reorder_level: reorderLevel,
-          unit: unit
+          unit: unit,
+          is_expired: isExpired
         });
 
         // 7. Trigger Autonomous 10km Geospatial FEFO Redistribution
@@ -137,8 +139,9 @@ export const processOrder = async (req, res) => {
           ingredientId,
           ingredientName,
           unit,
-          currentStock: newStock,
+          currentStock: isExpired ? 0 : newStock,
           reorderLevel,
+          isExpired,
           io
         });
 
@@ -244,18 +247,25 @@ async function triggerGeospatialRedistribution({
 
     if (invErr || !candidateInventories || candidateInventories.length === 0) return null;
 
-    // 4. Filter only stores with safe surplus (quantity > reorder_level)
+    // 4. Filter only stores with safe surplus (quantity > reorder_level) AND unexpired stock!
+    const now = new Date();
     const validDonors = candidateInventories.filter(
-      item => Number(item.quantity) - Number(item.reorder_level) > 1.0
+      item =>
+        (!item.expiry_date || new Date(item.expiry_date) > now) &&
+        Number(item.quantity) - Number(item.reorder_level) > 1.0
     );
 
     if (validDonors.length === 0) {
-      console.log(`[GeoRedistribute] No donor stores with surplus of ${ingredientName} within 10km.`);
+      console.log(`[GeoRedistribute] No donor stores with unexpired surplus of ${ingredientName} within 10km.`);
       return null;
     }
 
-    // 5. FEFO Sorting: Prioritize store whose stock expires FIRST to eliminate food waste!
-    validDonors.sort((a, b) => new Date(a.expiry_date) - new Date(b.expiry_date));
+    // 5. FEFO Sorting: Prioritize store whose unexpired stock expires FIRST to eliminate food waste!
+    validDonors.sort((a, b) => {
+      const timeA = a.expiry_date ? new Date(a.expiry_date).getTime() : Infinity;
+      const timeB = b.expiry_date ? new Date(b.expiry_date).getTime() : Infinity;
+      return timeA - timeB;
+    });
     const selectedDonor = validDonors[0];
 
     // Compute distance to chosen donor

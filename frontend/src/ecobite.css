@@ -1801,6 +1801,18 @@ body {
     border: 1px solid rgba(239, 68, 68, 0.3);
 }
 
+.matrix-status-pill--expiring {
+    background: #fffbeb;
+    color: #b45309;
+    border: 1px solid rgba(245, 158, 11, 0.4);
+}
+
+.matrix-status-pill--expired {
+    background: #fee2e2;
+    color: #991b1b;
+    border: 1px solid #ef4444;
+}
+
 .matrix-qty-val {
     font-size: 14px;
     font-weight: 800;
@@ -1825,6 +1837,10 @@ body {
 
 .matrix-bar-fill--warning {
     background: #ef4444;
+}
+
+.matrix-bar-fill--expiring {
+    background: #f59e0b;
 }
 
 .matrix-meta-row {

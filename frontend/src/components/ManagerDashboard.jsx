@@ -276,7 +276,6 @@ export default function ManagerDashboard({
               {inventory.map(item => {
                 const qty = Number(item.quantity);
                 const reorder = Number(item.reorder_level);
-                const isCritical = qty <= reorder;
                 const maxExpected = Math.max(reorder * 3, qty * 1.2, 1);
                 const progressPct = Math.min(100, Math.round((qty / maxExpected) * 100));
 
@@ -285,13 +284,43 @@ export default function ManagerDashboard({
                   ? Math.ceil((expiryDate - new Date()) / (1000 * 60 * 60 * 24))
                   : 10;
 
+                const isExpired = daysToExpiry <= 0;
+                const isExpiringSoon = daysToExpiry > 0 && daysToExpiry <= 3;
+                const isLowStock = qty <= reorder;
+
+                let statusLabel = 'Optimal';
+                let statusClass = 'matrix-status-pill--optimal';
+                let barClass = '';
+
+                if (isExpired) {
+                  statusLabel = 'Expired';
+                  statusClass = 'matrix-status-pill--expired';
+                  barClass = 'matrix-bar-fill--warning';
+                } else if (isLowStock && isExpiringSoon) {
+                  statusLabel = 'Critical Shortage';
+                  statusClass = 'matrix-status-pill--reorder';
+                  barClass = 'matrix-bar-fill--warning';
+                } else if (isExpiringSoon) {
+                  statusLabel = 'FEFO Urgent';
+                  statusClass = 'matrix-status-pill--expiring';
+                  barClass = 'matrix-bar-fill--expiring';
+                } else if (isLowStock) {
+                  statusLabel = 'Low Stock';
+                  statusClass = 'matrix-status-pill--reorder';
+                  barClass = 'matrix-bar-fill--warning';
+                } else {
+                  statusLabel = 'Optimal';
+                  statusClass = 'matrix-status-pill--optimal';
+                  barClass = '';
+                }
+
                 return (
                   <div key={item.id} className="matrix-row">
                     <div className="matrix-row-header">
                       <div className="matrix-item-name">
                         <span>{item.ingredients?.name}</span>
-                        <span className={`matrix-status-pill ${isCritical ? 'matrix-status-pill--reorder' : 'matrix-status-pill--optimal'}`}>
-                          {isCritical ? 'FEFO Alert' : 'Optimal'}
+                        <span className={`matrix-status-pill ${statusClass}`}>
+                          {statusLabel}
                         </span>
                       </div>
                       <span className="matrix-qty-val">
@@ -301,7 +330,7 @@ export default function ManagerDashboard({
 
                     <div className="matrix-bar-track">
                       <div
-                        className={`matrix-bar-fill ${isCritical ? 'matrix-bar-fill--warning' : ''}`}
+                        className={`matrix-bar-fill ${barClass}`}
                         style={{ width: `${progressPct}%` }}
                       />
                     </div>

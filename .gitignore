@@ -40,3 +40,13 @@ pnpm-debug.log*
 design.md
 */design.md
 
+# Minor Project Report & Academic Documentation
+*.docx
+*.pdf
+generate_report.py
+report_builder/
+test_page.py
+__pycache__/
+*.pyc
+
+

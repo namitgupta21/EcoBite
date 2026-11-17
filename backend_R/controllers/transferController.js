@@ -111,6 +111,12 @@ export const acceptTransferPing = async (req, res) => {
       return res.status(400).json({ error: "Donor store does not have this ingredient in inventory." });
     }
 
+    // Ensure donor stock is not expired
+    const isDonorExpired = donorInv.expiry_date && new Date(donorInv.expiry_date) <= new Date();
+    if (isDonorExpired) {
+      return res.status(400).json({ error: "Donor stock has expired and cannot be transferred." });
+    }
+
     if (Number(donorInv.quantity) < transferQty) {
       return res.status(400).json({
         error: `Insufficient stock at donor store. Available: ${donorInv.quantity}, Requested: ${transferQty}`
@@ -132,19 +138,36 @@ export const acceptTransferPing = async (req, res) => {
       .eq("ingredient_id", ingredient_id)
       .single();
 
+    const isRecipientExpired = recipientInv?.expiry_date && new Date(recipientInv.expiry_date) <= new Date();
+
     let newRecipientQty = transferQty;
     if (recipientInv) {
-      newRecipientQty = Math.round((Number(recipientInv.quantity) + transferQty) * 1000) / 1000;
+      // If recipient's existing stock was expired, replace with fresh transferred stock;
+      // otherwise, add transferQty to healthy stock.
+      newRecipientQty = isRecipientExpired
+        ? transferQty
+        : Math.round((Number(recipientInv.quantity) + transferQty) * 1000) / 1000;
+
+      const updateData = {
+        quantity: newRecipientQty,
+        updated_at: new Date().toISOString()
+      };
+
+      if (isRecipientExpired && donorInv.expiry_date) {
+        updateData.expiry_date = donorInv.expiry_date;
+      }
+
       await supabase
         .from("inventory")
-        .update({ quantity: newRecipientQty, updated_at: new Date().toISOString() })
+        .update(updateData)
         .eq("id", recipientInv.id);
     } else {
       await supabase.from("inventory").insert({
         store_id: to_store_id,
         ingredient_id,
         quantity: transferQty,
-        reorder_level: 5
+        reorder_level: 5,
+        ...(donorInv.expiry_date ? { expiry_date: donorInv.expiry_date } : {})
       });
     }
 
@@ -243,12 +266,15 @@ export const deleteTransferPing = async (req, res) => {
 
 /**
  * Autonomous Full System Redistribution Scan:
- * Scans all stores for shortage items (quantity <= reorder_level),
- * finds nearest donor within 10km using FEFO, and generates transfer pings.
+ * Scans all stores for shortage items (quantity <= reorder_level or expired stock),
+ * finds nearest donor within 10km with unexpired surplus stock using FEFO,
+ * and generates transfer pings.
  */
 export const autoScanRedistribute = async (req, res) => {
   try {
     const io = req.app.get("io");
+    const now = new Date();
+    const isExpired = item => Boolean(item.expiry_date && new Date(item.expiry_date) <= now);
 
     // 1. Fetch all inventory with store coordinates and ingredient details
     const { data: allInventory, error: invError } = await supabase
@@ -257,10 +283,12 @@ export const autoScanRedistribute = async (req, res) => {
 
     if (invError) throw invError;
 
-    // 2. Identify shortage items
-    const shortageItems = (allInventory || []).filter(
-      item => Number(item.quantity) <= Number(item.reorder_level)
-    );
+    // 2. Identify shortage items: either below reorder level OR expired stock
+    const shortageItems = (allInventory || []).filter(item => {
+      const expired = isExpired(item);
+      const belowReorder = Number(item.quantity) <= Number(item.reorder_level);
+      return belowReorder || expired;
+    });
 
     if (shortageItems.length === 0) {
       return res.status(200).json({
@@ -275,9 +303,13 @@ export const autoScanRedistribute = async (req, res) => {
     for (const needy of shortageItems) {
       if (!needy.stores?.lat || !needy.stores?.log) continue;
 
-      const deficit = Number(needy.reorder_level) - Number(needy.quantity) + 5;
+      const needyExpired = isExpired(needy);
+      // Expired items cannot be safely used; effective usable stock is 0
+      const usableQty = needyExpired ? 0 : Number(needy.quantity);
+      const reorderLevel = Number(needy.reorder_level) || 5;
+      const deficit = Math.max(reorderLevel - usableQty + 5, 5);
 
-      // Candidate donor stores with surplus
+      // Candidate donor stores with surplus AND fresh (unexpired) stock
       const candidateDonors = allInventory
         .filter(
           candidate =>
@@ -285,6 +317,7 @@ export const autoScanRedistribute = async (req, res) => {
             candidate.store_id !== needy.store_id &&
             candidate.stores?.lat &&
             candidate.stores?.log &&
+            !isExpired(candidate) && // Donor must NOT have expired stock
             Number(candidate.quantity) - Number(candidate.reorder_level) > 1.0
         )
         .map(candidate => {
@@ -298,9 +331,11 @@ export const autoScanRedistribute = async (req, res) => {
         })
         .filter(candidate => candidate.distance_km <= 10.0); // 10km geofence filter!
 
-      // Sort candidate donors using FEFO (stock expiring earliest first)
+      // Sort candidate donors using FEFO (unexpired stock expiring earliest first to prevent waste)
       candidateDonors.sort((a, b) => {
-        const dateDiff = new Date(a.expiry_date) - new Date(b.expiry_date);
+        const timeA = a.expiry_date ? new Date(a.expiry_date).getTime() : Infinity;
+        const timeB = b.expiry_date ? new Date(b.expiry_date).getTime() : Infinity;
+        const dateDiff = timeA - timeB;
         if (dateDiff !== 0) return dateDiff;
         return a.distance_km - b.distance_km; // tie-breaker: closer distance
       });
@@ -309,6 +344,8 @@ export const autoScanRedistribute = async (req, res) => {
         const bestDonor = candidateDonors[0];
         const availableSurplus = Number(bestDonor.quantity) - Number(bestDonor.reorder_level);
         const transferQty = Math.min(availableSurplus, deficit);
+
+        if (transferQty < 0.5) continue;
 
         // Check if an existing PENDING ping already exists
         const { data: existing } = await supabase
